@@ -1,0 +1,14 @@
+.min-vh-100.bg-light.d-flex.flex-column {
+    position: relative;
+}aside.d-flex.flex-column.p-0.border-end {
+    position: fixed;
+    height: 100%;
+    top: 65px;
+}
+.cswrap {
+    margin-left: 225px;
+    
+}
+
+
+
