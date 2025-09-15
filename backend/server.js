@@ -105,6 +105,41 @@ const fetchAndStoreFDP = async () => { //FDP
   }
 };
 
+const fetchAndStoreFDPMuiltiSheets = async () => { //FDP
+  try {
+    const client = await auth.getClient();
+    const sheets = google.sheets({ version: "v4", auth: client });
+
+    const spreadsheetId = "1enVTHFGgBz0IqL0VSHWynbcIZPn_Xf44ZuPvwdK1Qzs";
+    const range = "FDP_Demo";
+
+    const sheetNames = ["FDP_Demo", "EagleEye"];
+     
+    var sheetsData;
+
+    for (const name of sheetNames) {
+    const res = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: name, // whole sheet
+    });
+    
+    sheetData[name] = res.data;
+    console.log(`Data from ${name}:`, res.data.values);
+    }
+
+    // const response = await sheets.spreadsheets.values.get({ spreadsheetId, range });
+    // if (!response.data || !response.data.values) {
+    //   console.error("No data found in the 'FDP' sheet.");
+    //   return;
+    // }
+    // FDP_view = response.data;
+    console.log("Data for 'FDP' successfully refreshed from Google Sheets.");
+  } catch (err) {
+    console.error("Failed to fetch 'FDP' sheet data:", err.message);
+    FDP_view = null;
+  }
+};
+
 // Initial data fetch when the server starts
 fetchAndStoreData();
 fetchDataForReliability();

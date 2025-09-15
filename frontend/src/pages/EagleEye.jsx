@@ -18,7 +18,9 @@ const formatDate = (dateStr) => {
 const SheetTable = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedDate, setSelectedDate] = useState("");
+  const today = new Date().toISOString().split("T")[0];
+
+  const [selectedDate, setSelectedDate] = useState(today);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -91,15 +93,15 @@ const SheetTable = () => {
   let lastRegion = null;
 
   return (
-    <div className="cswrap">
-      <nav
+    <>
+    <nav
+        className="navbar navbar-expand-lg navbar-dark bg-primary sticky-top"
         style={{
           backgroundColor: "#072c62",
           color: "white",
           padding: "10px 20px",
           display: "flex",
           alignItems: "center",
-          marginRight: "150px",
         }}
       >
         <a className="navbar-brand d-flex align-items-center" href="#">
@@ -111,6 +113,9 @@ const SheetTable = () => {
           />
         </a>
       </nav>
+    
+    <div className="cswrap eagleye">
+      
 
       <div style={{ padding: "10px" }}>
         <label style={{ marginRight: "10px" }}>Select Date: </label>
@@ -121,7 +126,7 @@ const SheetTable = () => {
           style={{ marginBottom: "20px", padding: "5px" }}
         />
 
-        <div style={{ maxHeight: "90vh", overflow: "auto" }}>
+        <div style={{ maxHeight: "85vh", overflow: "auto" }}>
           <table
             style={{
               borderCollapse: "collapse",
@@ -248,6 +253,7 @@ const SheetTable = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

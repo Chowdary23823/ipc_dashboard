@@ -409,6 +409,14 @@ const Reliabilityweekly = ({
       <div className="row g-4 mb-4">
         <div className="col-12 col-md-6 col-lg-6">
           <BarChart
+            title="OFD"
+            labels={chartHourLabels}
+            data={chartData.ofd}
+            barColor="#ff8c00"
+          />
+        </div>
+        <div className="col-12 col-md-6 col-lg-6">
+          <BarChart
             title="Delivered"
             labels={chartHourLabels}
             data={chartData.delivered}
@@ -439,14 +447,7 @@ const Reliabilityweekly = ({
             barColor="#41b590"
           />
         </div>
-        <div className="col-12 col-md-6 col-lg-6">
-          <BarChart
-            title="OFD"
-            labels={chartHourLabels}
-            data={chartData.ofd}
-            barColor="#ff8c00"
-          />
-        </div>
+        
       </div>
     </div>
   );

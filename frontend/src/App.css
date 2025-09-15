@@ -6,9 +6,19 @@
     top: 65px;
 }
 .cswrap {
-    margin-left: 225px;
-    
+    margin-left: 235px;
+    display: block !important;
+    overflow: hidden !important;
+    width: 80vw;
 }
+
+.mt-3{
+    margin-top: 0.5rem !important;
+}
+
+/* .eagle-eye{
+    height: 85vh;
+} */
 
 
 

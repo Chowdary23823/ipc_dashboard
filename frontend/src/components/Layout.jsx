@@ -28,7 +28,7 @@ export default function Layout({ children }) {
         </aside>
 
         {/* Content area */}
-        <main className="flex-grow-1 overflow-auto">{children}</main>
+        <main className="flex-grow-1">{children}</main>
       </div>
     </div>
   );

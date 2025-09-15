@@ -1,5 +1,5 @@
 import React from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route,Navigate } from "react-router-dom";
 import Layout from "../components/Layout";
 import Reliabilityweekly from "../pages/Reliabilityweekly";
 import Attainment from "../pages/Attainment";
@@ -11,8 +11,9 @@ export default function AppRoutes() {
   return (
     <Layout>
       <Routes>
+        <Route path="/" element={<Navigate to="/Attainment" />} />
         <Route path="/Reliabilityweekly" element={<Reliabilityweekly />} />
-        <Route path="/Attainment" element={<Attainment />} />
+        <Route path="/Attainment" element={<Attainment />}/>
         <Route path="/Reliability" element={<Reliability />} />
         <Route path="/EagleEye" element={<EagleEye />} />
         <Route path="/FDP_view" element={<FDP_view />} />

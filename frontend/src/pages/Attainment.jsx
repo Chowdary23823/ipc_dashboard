@@ -746,6 +746,17 @@ export function Attainment() {
           </div>
 
           {/* KPI Cards */}
+          
+
+          {/* Chart */}
+          <div className="mt-4">
+            {loading ? (
+              <div className="alert alert-info">Loading chart data...</div>
+            ) : (
+              <ApexChartComponent chartData={tableData} />
+            )}
+          </div>
+
           <KPICards
             rawRows={rawRows}
             rowsForDate={rowsForDate}
@@ -757,15 +768,6 @@ export function Attainment() {
             setEventStartDate={setEventStartDate}
             setEventEndDate={setEventEndDate}
           />
-
-          {/* Chart */}
-          <div className="mt-4">
-            {loading ? (
-              <div className="alert alert-info">Loading chart data...</div>
-            ) : (
-              <ApexChartComponent chartData={tableData} />
-            )}
-          </div>
 
           {/* Table */}
           <div className="mt-4 table-responsive">
