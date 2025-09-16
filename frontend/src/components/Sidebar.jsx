@@ -16,8 +16,8 @@ export default function Sidebar() {
     <div
       className="d-flex flex-column p-4 h-100"
       style={{
-        backgroundColor: "rgb(7 44 98)",
-        color: "#0460a0",
+        backgroundColor: "#e9ecef",
+        // color: "#0460a0",
       }}
     >
       <ul className="nav nav-pills flex-column gap-3">
@@ -27,13 +27,14 @@ export default function Sidebar() {
             <Link
               to={path}
               className={`nav-link ${
-                pathname === path ? "active text-white" : "text-light"
+                pathname === path ? "active text-white" : "text-dark"
               }`}
               style={{
                 borderRadius: "6px",
                 backgroundColor:
                   pathname === path ? "#1a2942" : "transparent",
                 padding: "10px 15px",
+                
               }}
             >
               {label}

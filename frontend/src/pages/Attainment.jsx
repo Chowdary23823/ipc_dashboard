@@ -263,7 +263,7 @@ const Header = ({
   const formattedDate = date ? toYMD(date) : "";
 
   return (
-    <nav className="navbar navbar-expand-lg navbar-dark bg-primary sticky-top rounded-3 shadow">
+    <nav className="navbar navbar-expand-lg navbar-dark bg-primary sticky-top  shadow">
       <div className="container-fluid">
         <a className="navbar-brand d-flex align-items-center" href="#">
           <img

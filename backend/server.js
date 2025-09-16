@@ -118,7 +118,7 @@ const fetchAndStoreFDPMuiltiSheets = async () => { //FDP
     const spreadsheetId = "1enVTHFGgBz0IqL0VSHWynbcIZPn_Xf44ZuPvwdK1Qzs";
     //const range = "FDP_Demo";
 
-    const sheetNames = ["Day_Start", "FDP_Pendency"];
+    const sheetNames = ["Day_Start", "FDP_Pendency","Promises"];
      
     var sheetsData;
 
@@ -129,7 +129,7 @@ const fetchAndStoreFDPMuiltiSheets = async () => { //FDP
     });
     
     sheetData[name] = res.data;
-    console.log(`Data from ${name}:`, res.data.values);
+    console.log(`Data from from ${name}:`, name);
     }
 
     FDP_view = sheetData;
@@ -140,7 +140,7 @@ const fetchAndStoreFDPMuiltiSheets = async () => { //FDP
     //   return;
     // }
     // FDP_view = response.data;
-    console.log("Data for 'FDP' successfully refreshed from Google Sheets.");
+    console.log("Data for 'FDPMMul' successfully refreshed from Google Sheets.");
   } catch (err) {
     console.error("Failed to fetch 'FDP' sheet data:", err.message);
     FDP_view = null;
@@ -208,7 +208,8 @@ app.get("/api/eagle-data", (req, res) => { //eagle
   }
 });
 
-app.get("/api/FDP-data", (req, res) => { //FDP
+app.get("/api/FDP-data", async (req, res) => { //FDP
+  await fetchAndStoreFDPMuiltiSheets();
   if (FDP_view) {
     res.json(FDP_view);
   } else {

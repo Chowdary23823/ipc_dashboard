@@ -725,7 +725,7 @@ export default function App() {
   return (
     <>
       <Bootstrap />
-      <nav className="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+      <nav className="navbar navbar-expand-lg navbar-dark bg-primary sticky-top shadow">
         <div className="container-fluid">
           <a className="navbar-brand d-flex align-items-center" href="#"><img src="Ekart Logo White.png" alt="eKart Logo" height="40" className="me-2" /></a>
           <div className="d-flex align-items-center">

@@ -164,7 +164,8 @@ const Reliabilityweekly = ({
   selectedHour,
   date,
   allData,
-  dayStartData
+  dayStartData,
+  promisesData
 }) => {
   const [statsData, setStatsData] = useState([]);
   const [chartData, setChartData] = useState({
@@ -231,7 +232,7 @@ const Reliabilityweekly = ({
     ];
   };
 
-  const calculateStats = (data, selectedHour,filteredDayStartData) => {
+  const calculateStats = (data, selectedHour,filteredDayStartData,filteredPromisesData) => {
     if (data.length === 0) {
       return getDefaultStats();
     }
@@ -240,13 +241,13 @@ const Reliabilityweekly = ({
       (item) => selectedHour === "All" || String(item.hours) === String(selectedHour)
     );
 
-    const promises = filteredDayStartData.reduce(
+    const totalDaystart = filteredDayStartData.reduce(
       (sum, item) => sum + (parseFloat(item.dayStartCpd) || 0),
       0
     );
 
-    const totalDaystart = filteredBySelectedHour.reduce(
-      (sum, item) => sum + (parseFloat(item.daystart) || 0),
+    const promises = filteredPromisesData.reduce(
+      (sum, item) => sum + (parseFloat(item.promises) || 0),
       0
     );
 
@@ -400,6 +401,16 @@ const Reliabilityweekly = ({
       return;
     }
 
+    const filteredPromisesData = promisesData.filter((item)=>{
+      const isDateMatch = new Date(item.date).toDateString() === date.toDateString();
+      const isZoneMatch = selectedZones.includes("All") || selectedZones.includes(item.zone);
+      const isGmMatch =
+        selectedGm === "All" ||
+        (item.gm && item.gm.toLowerCase() === selectedGm.toLowerCase());
+
+      return isDateMatch && isZoneMatch && isGmMatch;
+    })
+
     const filteredDayStartData = dayStartData.filter((item)=>{
       const isDateMatch = new Date(item.date).toDateString() === date.toDateString();
       const isZoneMatch = selectedZones.includes("All") || selectedZones.includes(item.zone);
@@ -419,7 +430,7 @@ const Reliabilityweekly = ({
       return isDateMatch && isZoneMatch && isGmMatch;
     });
 
-    setStatsData(calculateStats(filteredData, selectedHour,filteredDayStartData));
+    setStatsData(calculateStats(filteredData, selectedHour,filteredDayStartData,filteredPromisesData));
 
   }, [allData, selectedZones, selectedGm, selectedHour, date]);
 
@@ -590,6 +601,7 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [dayStartData,setDayStartData] = useState([]);
+  const [promisesData,setPromisesData] = useState([]);
   
   const ALLOWED_ZONES = ['East', 'West', 'North', 'South'];
   const API_URL = "http://localhost:3001/api/FDP-data";
@@ -602,9 +614,11 @@ export default function App() {
       }
       const data = await response.json();
 
-      const dayStart = data['Day_Start'].values;
+      const dayStart = data['Day_Start']?.values;
 
-      const rowsData = data['FDP_Pendency'].values;
+      const rowsData = data['FDP_Pendency']?.values;
+
+      const promisesData = data['Promises']?.values;
 
       if (!rowsData || rowsData.length < 2) {
         setAllData([]);
@@ -663,8 +677,25 @@ export default function App() {
 
       setDayStartData(parsedDayStartData);
 
+      const headerPromises = promisesData[0].map(h => String(h).trim().toLowerCase().replace(/ /g, "_"));
+
+      const rowsPromises = promisesData.slice(1);
+
+      const parsedpromisesData = rowsPromises.map((row) => {
+        const rowData = {};
+        rowData.zone = row[headerPromises.indexOf("zone")] || "";
+        rowData.gm = row[headerPromises.indexOf("gm_name")] || "";
+        rowData.promises = parseFloat(row[headerPromises.indexOf("promises")] || 0);
+        rowData.date = row[headerPromises.indexOf("date")] || "";
+        return rowData;
+      });
+
+      setPromisesData(parsedpromisesData);
+
       setIsLoading(false);
     } catch (e) {
+
+      console.log(e);
       setError("Failed to load Google Sheet data. Ensure the backend server is running.");
       setIsLoading(false);
     }
@@ -742,7 +773,7 @@ export default function App() {
 
   return (
     <>
-      <nav className="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+      <nav className="navbar navbar-expand-lg navbar-dark bg-primary sticky-top shadow">
         <div className="container-fluid">
           <a className="navbar-brand d-flex align-items-center" href="#">
             <img
@@ -882,6 +913,7 @@ export default function App() {
           date={date}
           allData={allData}
           dayStartData={dayStartData}
+          promisesData={promisesData}
         />
       )}
     </>

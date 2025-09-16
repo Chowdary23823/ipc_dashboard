@@ -664,7 +664,7 @@ export default function App() {
       />
       <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
       <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
-      <nav className="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+      <nav className="navbar navbar-expand-lg navbar-dark bg-primary sticky-top shadow">
         <div className="container-fluid">
           <a className="navbar-brand d-flex align-items-center" href="#">
             <img
