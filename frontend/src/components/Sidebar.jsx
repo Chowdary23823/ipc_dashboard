@@ -7,6 +7,7 @@ const links = [
   { path: "/Reliability", label: "Reliability" },
   { path: "/EagleEye", label: "EagleEye" },
   { path: "/FDP_view", label: "FDP_view" },
+  { path: "/RSPS_view", label: "RSPS_view" },
 ];
 
 export default function Sidebar() {

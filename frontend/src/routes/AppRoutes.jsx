@@ -6,6 +6,7 @@ import Attainment from "../pages/Attainment";
 import Reliability from "../pages/Reliability";
 import EagleEye from "../pages/EagleEye";
 import FDP_view from "../pages/FDP_view";
+import RSPS_view from "../pages/RSPS_view";
 
 export default function AppRoutes() {
   return (
@@ -17,6 +18,7 @@ export default function AppRoutes() {
         <Route path="/Reliability" element={<Reliability />} />
         <Route path="/EagleEye" element={<EagleEye />} />
         <Route path="/FDP_view" element={<FDP_view />} />
+        <Route path="/RSPS_view" element={<RSPS_view />} />
        
 
       </Routes>

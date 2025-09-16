@@ -17,6 +17,7 @@ let sheetData = null; // For D-1 Reservation
 let reliabilityweek = null; // For Reliability
 let eagleeye = null;  //eagle
 let FDP_view = null; //FDP
+let RSPS_view = null; //RSPS
 
 // Google Sheets auth
 const auth = new google.auth.GoogleAuth({
@@ -147,17 +148,70 @@ const fetchAndStoreFDPMuiltiSheets = async () => { //FDP
   }
 };
 
+const fetchAndStoreRSPS = async () => { //RSPS
+  try {
+    const client = await auth.getClient();
+    const sheets = google.sheets({ version: "v4", auth: client });
+
+    const spreadsheetId = "1enVTHFGgBz0IqL0VSHWynbcIZPn_Xf44ZuPvwdK1Qzs";
+    const range = "RSPS_Pendencydemo";
+
+    const response = await sheets.spreadsheets.values.get({ spreadsheetId, range });
+    if (!response.data || !response.data.values) {
+      console.error("No data found in the 'RSPS' sheet.");
+      return;
+    }
+    RSPS_view = response.data;
+    console.log("Data for 'RSPS' successfully refreshed from Google Sheets.");
+  } catch (err) {
+    console.error("Failed to fetch 'RSPS' sheet data:", err.message);
+    RSPS_view = null;
+  }
+};
+
+const fetchAndStoreRSPSMul = async () => { //RSPS
+  try {
+    const client = await auth.getClient();
+    const sheets = google.sheets({ version: "v4", auth: client });
+
+    const spreadsheetId = "1enVTHFGgBz0IqL0VSHWynbcIZPn_Xf44ZuPvwdK1Qzs";
+    const sheetNames = ["Day_Start", "RSPS_Pendency"];
+     
+    var sheetsData;
+
+    for (const name of sheetNames) {
+    const res = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: name, // whole sheet
+    });
+    
+    sheetData[name] = res.data;
+
+    console.log(`Data from from ${name}:`, name);
+    }
+
+    RSPS_view = sheetData;
+
+    console.log("Data for 'RSPS' successfully refreshed from Google Sheets.");
+  } catch (err) {
+    console.error("Failed to fetch 'RSPS' sheet data:", err.message);
+    RSPS_view = null;
+  }
+};
+
 // Initial data fetch when the server starts
 fetchAndStoreData();
 fetchDataForReliability();
 fetchAndStoreeagle();
 fetchAndStoreFDPMuiltiSheets();
+fetchAndStoreRSPSMul();
 
 // Schedule data refresh every 60 seconds
 setInterval(fetchAndStoreData, 60000);
 setInterval(fetchDataForReliability, 60000);
 setInterval(fetchAndStoreeagle, 60000);
 setInterval(fetchAndStoreFDPMuiltiSheets, 60000);
+setInterval(fetchAndStoreRSPSMul,60000);
 
 // Root route to show the server is working
 app.get("/", (req, res) => {
@@ -224,6 +278,22 @@ app.get("/api/FDP-data", async (req, res) => { //FDP
 app.get("/api/reliability-data", (req, res) => {
   if (reliabilityweek) {
     res.json(reliabilityweek);
+  } else {
+    res.status(503).json({
+      error: "Data is not yet available or failed to load. Please try again in a few moments."
+    });
+  }
+});
+
+app.get("/api/refresh-RSPS-data", async (req, res) => { //RSPS
+  await fetchAndStoreRSPSMul();
+  res.status(200).json({ message: "RSPS data refresh triggered successfully." });
+});
+
+app.get("/api/RSPS-data", (req, res) => { //RSPS
+  if (RSPS_view) {
+    fetchAndStoreRSPSMul();
+    res.json(RSPS_view);
   } else {
     res.status(503).json({
       error: "Data is not yet available or failed to load. Please try again in a few moments."
