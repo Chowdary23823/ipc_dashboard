@@ -151,7 +151,7 @@ const BarChart = ({ title, labels, data, barColor }) => {
   };
 
   return (
-    <div className="bg-white p-4 rounded-5 shadow-lg h-150">
+    <div className="bg-white p-4 rounded-5 shadow-lg" style={{height:"60vh"}}>
       <Bar options={options} data={chartData} ref={chartRef} />
     </div>
   );
@@ -460,8 +460,8 @@ const Reliabilityweekly = ({
           </div>
         ))}
       </div>
-      <div className="row g-4 mb-4">
-        <div className="col-12">
+      <div className="row g-4 mb-4" style={{display:"flex"}}>
+        <div className="col-12" style={{width:"50%"}}>
           <div className="position-relative">
             <BarChart
               title="DayStart by Day"
@@ -505,7 +505,7 @@ const Reliabilityweekly = ({
             </div>
           </div>
         </div>
-        <div className="col-12">
+        <div className="col-12" style={{width:"50%"}}>
           <div className="position-relative">
             <BarChart
               title="UNA+Attempted_NCD by Day"

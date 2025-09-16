@@ -147,7 +147,7 @@ const KPICards = ({
   return (
     <div className="row mt-3">
       {kpis.map((kpi, idx) => (
-        <div key={idx} className="col-md-3 mb-3">
+        <div key={idx} className="col-md-3 mb-3" style={{minWidth: "fit-content"}}>
           <div className="card shadow rounded-3 border-0">
             <div className="card-body text-center">
               <h6 className="fw-bold">{kpi.title}</h6>
@@ -749,15 +749,16 @@ export function Attainment() {
           
 
           {/* Chart */}
-          <div className="mt-4">
+          <div className="mt-4" style={{display:"flex"}}>
+            <div style={{width:"90vw"}}>
             {loading ? (
               <div className="alert alert-info">Loading chart data...</div>
             ) : (
               <ApexChartComponent chartData={tableData} />
             )}
-          </div>
+            </div>
 
-          <KPICards
+            <KPICards
             rawRows={rawRows}
             rowsForDate={rowsForDate}
             rowsForDailyAttainment={rowsForDailyAttainment}
@@ -768,6 +769,9 @@ export function Attainment() {
             setEventStartDate={setEventStartDate}
             setEventEndDate={setEventEndDate}
           />
+          </div>
+
+          
 
           {/* Table */}
           <div className="mt-4 table-responsive">
