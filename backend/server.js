@@ -90,7 +90,7 @@ const fetchAndStoreFDP = async () => { //FDP
     const sheets = google.sheets({ version: "v4", auth: client });
 
     const spreadsheetId = "1enVTHFGgBz0IqL0VSHWynbcIZPn_Xf44ZuPvwdK1Qzs";
-    const range = "FDP_Demo";
+    const range = "FDP_Pendency";
 
     const response = await sheets.spreadsheets.values.get({ spreadsheetId, range });
     if (!response.data || !response.data.values) {
@@ -111,9 +111,9 @@ const fetchAndStoreFDPMuiltiSheets = async () => { //FDP
     const sheets = google.sheets({ version: "v4", auth: client });
 
     const spreadsheetId = "1enVTHFGgBz0IqL0VSHWynbcIZPn_Xf44ZuPvwdK1Qzs";
-    const range = "FDP_Demo";
+    //const range = "FDP_Demo";
 
-    const sheetNames = ["FDP_Demo", "EagleEye"];
+    const sheetNames = ["Day_Start", "FDP_Pendency"];
      
     var sheetsData;
 
@@ -126,6 +126,8 @@ const fetchAndStoreFDPMuiltiSheets = async () => { //FDP
     sheetData[name] = res.data;
     console.log(`Data from ${name}:`, res.data.values);
     }
+
+    FDP_view = sheetData;
 
     // const response = await sheets.spreadsheets.values.get({ spreadsheetId, range });
     // if (!response.data || !response.data.values) {
@@ -144,13 +146,13 @@ const fetchAndStoreFDPMuiltiSheets = async () => { //FDP
 fetchAndStoreData();
 fetchDataForReliability();
 fetchAndStoreeagle();
-fetchAndStoreFDP();
+fetchAndStoreFDPMuiltiSheets();
 
 // Schedule data refresh every 60 seconds
 setInterval(fetchAndStoreData, 60000);
 setInterval(fetchDataForReliability, 60000);
 setInterval(fetchAndStoreeagle, 60000);
-setInterval(fetchAndStoreFDP, 60000);
+setInterval(fetchAndStoreFDPMuiltiSheets, 60000);
 
 // Root route to show the server is working
 app.get("/", (req, res) => {

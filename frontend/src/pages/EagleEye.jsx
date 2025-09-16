@@ -126,7 +126,7 @@ const SheetTable = () => {
           style={{ marginBottom: "20px", padding: "5px" }}
         />
 
-        <div style={{ maxHeight: "85vh", overflow: "auto" }}>
+        <div style={{ maxHeight: "75vh", overflow: "auto" }}>
           <table
             style={{
               borderCollapse: "collapse",

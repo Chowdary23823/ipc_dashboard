@@ -505,13 +505,13 @@ const Reliabilityweekly = ({ selectedZones, selectedGm, selectedHour, date, date
       }}
     >
       {/* Stat Cards */}
-      <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-5 g-4 mb-4">
+      {/* <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-5 g-4 mb-4">
         {statsData.map((stat, index) => (
           <div key={index} className="col">
             <StatCard {...stat} />
           </div>
         ))}
-      </div>
+      </div> */}
 
       {/* Charts */}
       <div className="row g-4 mb-4">

@@ -79,16 +79,16 @@ const StatCard = ({ title, mainValue, percentage, icon, gradient }) => {
       <div style={circle1Style}></div>
       <div style={circle2Style}></div>
 
-      <div className="d-flex justify-content-between align-items-start" style={{ zIndex: 1 }}>
-        <h3 className="fs-6 fw-normal opacity-90 mb-0">{title}</h3>
-        <p className="mb-0 fw-bold" style={{ fontSize: "clamp(1.2rem, 3vw, 1.75rem)" }}>
+      <div className="d-flex justify-content-between" style={{ zIndex: 1,alignItems: "center" }}>
+        <h3 className="fs-6 fw-normal opacity-90 mb-0" style={{ maxWidth: "50%",  wordWrap: "break-word"}}>{title}</h3>
+        <p className="mb-0 fw-bold" style={{ fontSize: "clamp(0.5rem, 1.5rem, 2.5rem)" }}>
           {percentage}
         </p>
       </div>
 
       <div className="d-flex align-items-end" style={{ zIndex: 1 }}>
         <div className="d-flex align-items-center">
-          <p className="mb-0 fw-bold" style={{ fontSize: "clamp(1.8rem, 4vw, 2.5rem)", lineHeight: 1 }}>
+          <p className="mb-0 fw-bold" style={{ fontSize: "clamp(0.5rem, 1.5vw, 3.5rem)", lineHeight: 1 }}>
             {formatWithCommas(mainValue)}
           </p>
           {icon && <span className="ms-1 fs-4 fw-bold">{icon}</span>}
@@ -164,6 +164,7 @@ const Reliabilityweekly = ({
   selectedHour,
   date,
   allData,
+  dayStartData
 }) => {
   const [statsData, setStatsData] = useState([]);
   const [chartData, setChartData] = useState({
@@ -230,30 +231,41 @@ const Reliabilityweekly = ({
     ];
   };
 
-  const calculateStats = (data, selectedHour) => {
+  const calculateStats = (data, selectedHour,filteredDayStartData) => {
     if (data.length === 0) {
       return getDefaultStats();
     }
+
     const filteredBySelectedHour = data.filter(
       (item) => selectedHour === "All" || String(item.hours) === String(selectedHour)
     );
-    const promises = filteredBySelectedHour.reduce(
+
+    const promises = filteredDayStartData.reduce(
+      (sum, item) => sum + (parseFloat(item.dayStartCpd) || 0),
+      0
+    );
+
+    const totalDaystart = filteredBySelectedHour.reduce(
       (sum, item) => sum + (parseFloat(item.daystart) || 0),
       0
     );
-    const totalDaystart = promises;
+
+    // const totalDaystart = promises;
     const totalUNA = filteredBySelectedHour.reduce(
       (sum, item) => sum + (parseFloat(item.una) || 0),
       0
     );
+
     const totalNCD = filteredBySelectedHour.reduce(
       (sum, item) => sum + (parseFloat(item.ncd) || 0),
       0
     );
+
     const totalUNAAttemptedNCD = filteredBySelectedHour.reduce(
       (sum, item) => sum + (parseFloat(item["una+attempted_ncd"]) || 0),
       0
     );
+
     const totalCD = filteredBySelectedHour.reduce(
       (sum, item) => sum + (parseFloat(item.cd) || 0),
       0
@@ -387,6 +399,17 @@ const Reliabilityweekly = ({
       setStatsData(getDefaultStats());
       return;
     }
+
+    const filteredDayStartData = dayStartData.filter((item)=>{
+      const isDateMatch = new Date(item.date).toDateString() === date.toDateString();
+      const isZoneMatch = selectedZones.includes("All") || selectedZones.includes(item.zone);
+      const isGmMatch =
+        selectedGm === "All" ||
+        (item.gm && item.gm.toLowerCase() === selectedGm.toLowerCase());
+
+      return isDateMatch && isZoneMatch && isGmMatch;
+    })
+
     const filteredData = allData.filter((item) => {
       const isDateMatch = new Date(item.date).toDateString() === date.toDateString();
       const isZoneMatch = selectedZones.includes("All") || selectedZones.includes(item.zone);
@@ -395,7 +418,9 @@ const Reliabilityweekly = ({
         (item.gm && item.gm.toLowerCase() === selectedGm.toLowerCase());
       return isDateMatch && isZoneMatch && isGmMatch;
     });
-    setStatsData(calculateStats(filteredData, selectedHour));
+
+    setStatsData(calculateStats(filteredData, selectedHour,filteredDayStartData));
+
   }, [allData, selectedZones, selectedGm, selectedHour, date]);
 
   useEffect(() => {
@@ -564,6 +589,7 @@ export default function App() {
   const [selectedHour, setSelectedHour] = useState("All");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [dayStartData,setDayStartData] = useState([]);
   
   const ALLOWED_ZONES = ['East', 'West', 'North', 'South'];
   const API_URL = "http://localhost:3001/api/FDP-data";
@@ -575,7 +601,11 @@ export default function App() {
         throw new Error("Failed to load data from server.");
       }
       const data = await response.json();
-      const rowsData = data.values;
+
+      const dayStart = data['Day_Start'].values;
+
+      const rowsData = data['FDP_Pendency'].values;
+
       if (!rowsData || rowsData.length < 2) {
         setAllData([]);
         setZones([]);
@@ -586,10 +616,14 @@ export default function App() {
         setSelectedGm("All");
         setSelectedHour("All");
         setIsLoading(false);
+        setDayStartData([]);
         return;
       }
+      
       const headers = rowsData[0].map(h => String(h).trim().toLowerCase().replace(/ /g, "_"));
+      
       const rows = rowsData.slice(1);
+      
       const parsedData = rows.map((row) => {
         const rowData = {};
         rowData.zone = row[headers.indexOf("zone")] || "";
@@ -603,7 +637,32 @@ export default function App() {
         rowData.hours = row[headers.indexOf("hour")] || ""; // Correctly map 'hour' column
         return rowData;
       });
+
+
       setAllData(parsedData);
+
+      const headersDayStart = dayStart[0].map(h => String(h).trim().toLowerCase().replace(/ /g, "_"));
+
+      const rowsHeadersDayStart = dayStart.slice(1);
+
+      const parsedDayStartData = rowsHeadersDayStart.map((row)=>{
+        const rowData = {};
+
+        rowData.dayStartCpd = parseFloat(row[headersDayStart.indexOf("day_start-cpd")] || 0);
+        
+        rowData.date = row[headersDayStart.indexOf("date")] || "";
+
+        rowData.hour = row[headersDayStart.indexOf("hour")] || "";
+
+        rowData.zone = row[headersDayStart.indexOf("zone")] || "";
+
+        rowData.gm = row[headersDayStart.indexOf("gm")] || "";
+
+        return rowData;
+      });
+
+      setDayStartData(parsedDayStartData);
+
       setIsLoading(false);
     } catch (e) {
       setError("Failed to load Google Sheet data. Ensure the backend server is running.");
@@ -822,6 +881,7 @@ export default function App() {
           selectedHour={selectedHour}
           date={date}
           allData={allData}
+          dayStartData={dayStartData}
         />
       )}
     </>
