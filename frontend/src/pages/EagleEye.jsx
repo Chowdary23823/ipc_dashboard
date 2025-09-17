@@ -3,11 +3,11 @@ import React, { useEffect, useState } from "react";
 const hours = Array.from({ length: 24 }, (_, i) => `${i}:00`);
 
 const regionColors = {
-  East: { region: "#ff9999", gm: "#ffc2c2" },
-  West: { region: "#99ccff", gm: "#cce6ff" },
-  North: { region: "#99ff99", gm: "#ccffcc" },
-  South: { region: "#ffd699", gm: "#ffe6cc" },
-  Middle: { region: "#d9b3ff", gm: "#e6ccff" },
+  East: { region: "#78adff", gm: "#bfd8ff" },
+  West: { region: "#78adff", gm: "#bfd8ff" },
+  North: { region: "#78adff", gm: "#bfd8ff" },
+  South: { region: "#78adff", gm: "#bfd8ff" },
+  Middle: { region: "#78adff", gm: "#bfd8ff" },
 };
 
 const formatDate = (dateStr) => {
@@ -60,34 +60,49 @@ const SheetTable = () => {
     return !selectedDate || rowDate === formattedSelectedDate;
   });
 
-  const getCellStyle = (value, gmName) => {
+  const getCellStyle = (value, gmName,index) => {
     const num = parseFloat(String(value).replace("%", "")) || 0;
+    
     if (
-      gmName.toLowerCase() === "total" ||
-      gmName.toLowerCase() === "grand total"
+      gmName.toLowerCase() === "total" 
     ) {
-      if (num >= 90) return { backgroundColor: "#00b050", color: "white" };
-      if (num >= 60) return { backgroundColor: "#92d050", color: "black" };
-      return { backgroundColor: "#ff0000", color: "white" };
-    } else {
-      if (num >= 90) return { backgroundColor: "#b6f2b6" };
-      if (num >= 60) return { backgroundColor: "#fff49a" };
-      return { backgroundColor: "#f28b82" };
+      
+      return { backgroundColor: "yellow", color: "black" , fontWeight: "bold" };
+    } else if(gmName.toLowerCase() === "grand total"){
+      return { backgroundColor: "#305496", color: "white" , fontWeight: "bold" };
+    }else if(index == 7 && num>=80){
+      return { backgroundColor: "#7cff41", color: "black" , fontWeight: "bold" };
     }
+    else if(index == 7 && num>=60){
+      return { backgroundColor: "#feffa2", color: "black" , fontWeight: "bold" };
+    }
+    else if(index == 7 && num<60){
+      return { backgroundColor: "#ff0404", color: "black" , fontWeight: "bold" };
+    }
+    else {
+     
+      return { backgroundColor: "white" };
+    }
+
+    
   };
 
   const getRegionRowSpan = (startIdx) => {
     if (startIdx < 0 || startIdx >= filteredRows.length) return 0;
     const currentRegion = filteredRows[startIdx][regionIndex];
     let span = 0;
+    let foundCurrentRegion = false;
     for (let i = startIdx; i < filteredRows.length; i++) {
       if (filteredRows[i] && filteredRows[i][regionIndex] === currentRegion) {
+        foundCurrentRegion = true;
         span++;
-      } else {
+      } else if(foundCurrentRegion && filteredRows[i][regionIndex] == "" || filteredRows[i][regionIndex] == null || filteredRows[i][regionIndex] === currentRegion ) {
+        span++;
+      }else{
         break;
       }
     }
-    return span;
+    return currentRegion.toLowerCase() === "west" ? span - 1 : span;
   };
 
   let lastRegion = null;
@@ -147,7 +162,7 @@ const SheetTable = () => {
                     zIndex: 10,
                   }}
                 >
-                  Region
+                  ZONE
                 </th>
                 <th
                   style={{
@@ -186,7 +201,7 @@ const SheetTable = () => {
                 const gmName = row[gmIndex];
                 const hourData = row.slice(hourStartIndex, hourEndIndex + 1);
 
-                const renderRegionCell = lastRegion !== regionName;
+                const renderRegionCell = regionName!="" && lastRegion !== regionName;
                 if (renderRegionCell) {
                   lastRegion = regionName;
                 }
@@ -214,16 +229,28 @@ const SheetTable = () => {
                         {regionName}
                       </td>
                     )}
+
+                    {
+                      gmName?.trim().toLowerCase() === "grand total" && (
+                        <td
+                        style={{
+                          backgroundColor: "#305496",
+                        }}
+                      ></td>
+                      )
+                    }
+
                     <td
                       style={{
                         padding: "6px",
                         border: "1px solid #ddd",
                         fontWeight: "bold",
                         backgroundColor:
-                          gmName?.trim().toLowerCase() === "total" ||
-                          gmName?.trim().toLowerCase() === "grand total"
-                            ? regionColors[regionName]?.region || "#f2f2f2"
-                            : regionColors[regionName]?.gm || "#f2f2f2",
+                          gmName?.trim().toLowerCase() === "total" 
+                            ? "yellow"
+                            : gmName?.trim().toLowerCase() === "grand total" 
+                            ? "#305496"
+                            : "#bfd8ff",
                         whiteSpace: "nowrap",
                         position: "sticky",
                         left: "60px",
@@ -237,7 +264,7 @@ const SheetTable = () => {
                       <td
                         key={hIndex}
                         style={{
-                          ...getCellStyle(val, gmName),
+                          ...getCellStyle(val, gmName,hIndex),
                           padding: "6px",
                           border: "1px solid #ddd",
                         }}
