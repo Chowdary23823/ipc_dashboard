@@ -65,12 +65,12 @@ const Navbar = ({
               data-bs-toggle="dropdown"
               aria-expanded="false"
             >
-              {isLoading ? "Loading Zones..." : selectedZone}
+              Zone: {isLoading ? "Loading Zones..." : selectedZone}
             </button>
             <ul className="dropdown-menu rounded">
               <li>
                 <a className="dropdown-item" href="#" onClick={() => setSelectedZone("All")}>
-                  All
+                  All - ZONE
                 </a>
               </li>
               {error ? (
@@ -105,12 +105,12 @@ const Navbar = ({
               data-bs-toggle="dropdown"
               aria-expanded="false"
             >
-              {isLoading ? "Loading GMs..." : selectedGm}
+              GM: {isLoading ? "Loading GMs..." : selectedGm}
             </button>
             <ul className="dropdown-menu rounded">
               <li>
                 <a className="dropdown-item" href="#" onClick={() => setSelectedGm("All")}>
-                  All
+                  All - GM
                 </a>
               </li>
               {gms.length > 0 ? (

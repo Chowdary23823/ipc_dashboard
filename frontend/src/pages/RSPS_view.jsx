@@ -79,7 +79,7 @@ const Dashboard = ({ date, selectedZones, selectedGm, selectedHour, allData,dayS
     return `${year}-${month}-${day}`;
   };
 
-  const getFilteredData = (data) => {
+  const getFilteredData = (data,skipHours = false) => {
     if (!data || data.length === 0 || !date) {
       return [];
     }
@@ -88,13 +88,13 @@ const Dashboard = ({ date, selectedZones, selectedGm, selectedHour, allData,dayS
       const selectedDate = formatDate(date);
       return itemDate === selectedDate;
     });
-    if (selectedZones && selectedZones[0] !== "All" && item?.zone) {
+    if (selectedZones && selectedZones[0] !== "All" ) {
       filteredData = filteredData.filter(item => selectedZones.includes(item?.zone));
     }
-    if (selectedGm && selectedGm !== "All" && item?.gm) {
+    if (selectedGm && selectedGm !== "All" ) {
       filteredData = filteredData.filter(item => item?.gm === selectedGm);
     }
-    if (selectedHour && selectedHour !== "All" && item?.hours) {
+    if (selectedHour && selectedHour !== "All" && !skipHours) {
       filteredData = filteredData.filter(item => {
         const itemHour = parseInt(String(item?.hours).trim().split(' ')[0], 10);
         return itemHour === parseInt(selectedHour, 10);
@@ -106,9 +106,9 @@ const Dashboard = ({ date, selectedZones, selectedGm, selectedHour, allData,dayS
   const calculateMetrics = (allData,dayStartData,promisesData) => {
     const rspsPendencyData = getFilteredData(allData);
 
-const dayStartSheetData = getFilteredData(dayStartData);
+    const dayStartSheetData = getFilteredData(dayStartData,true);
 
-const promisesSheetData = getFilteredData(promisesData);
+    const promisesSheetData = getFilteredData(promisesData,true);
 
     const overallDaystart = dayStartSheetData.reduce((sum, item) => sum + (item.overall_daystart || 0), 0);
     const cpdDaystart = dayStartSheetData.reduce((sum, item) => sum + (item.day_start_cpd || 0), 0);
@@ -124,6 +124,8 @@ const promisesSheetData = getFilteredData(promisesData);
     const ipd3Pendency = rspsPendencyData.reduce((sum, item) => sum + (item.ipd3_pendency || 0), 0);
     const ipd3PlusPendency = rspsPendencyData.reduce((sum, item) => sum + (item.ipd3plus_pendency || 0), 0);
     const fpdPendency = rspsPendencyData.reduce((sum, item) => sum + (item.fpd_pendency || 0), 0);
+    const ncd = rspsPendencyData.reduce((sum, item) => sum + (item.ncd || 0), 0);
+    const cd = rspsPendencyData.reduce((sum, item) => sum + (item.cd || 0), 0);
 
 const promisesFiltredData = promisesSheetData.reduce((sum, item) => sum + (item.promises || 0), 0);
     
@@ -140,7 +142,9 @@ const promisesFiltredData = promisesSheetData.reduce((sum, item) => sum + (item.
       ipd3Pendency,
       ipd3PlusPendency,
       fpdPendency,
-promisesFiltredData
+promisesFiltredData,
+ncd,
+cd
     };
   };
 
@@ -523,7 +527,7 @@ setPromisesData([]);
                 data-bs-toggle="dropdown"
                 aria-expanded="false"
               >
-                {isLoading ? "Loading Zones..." : selectedZones}
+                Zone: {isLoading ? "Loading Zones..." : selectedZones}
               </button>
               <ul className="dropdown-menu rounded">
                 {zones.map((zone, idx) => (
@@ -543,7 +547,7 @@ setPromisesData([]);
                 data-bs-toggle="dropdown"
                 aria-expanded="false"
               >
-                {isLoading ? "Loading GMs..." : selectedGm}
+                GM: {isLoading ? "Loading GMs..." : selectedGm}
               </button>
               <ul className="dropdown-menu rounded">
                 {gms.map((gm, idx) => (
@@ -563,7 +567,7 @@ setPromisesData([]);
                 data-bs-toggle="dropdown"
                 aria-expanded="false"
               >
-                {isLoading ? "Loading Hours..." : selectedHour}
+                Hrs: {isLoading ? "Loading Hours..." : selectedHour}
               </button>
               <ul className="dropdown-menu rounded">
                 {hours.map((hr, idx) => (

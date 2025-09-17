@@ -817,7 +817,7 @@ export default function App() {
                 data-bs-toggle="dropdown"
                 aria-expanded="false"
               >
-                {selectedZones.includes("All") ? "All" : selectedZones.join(", ")}
+                Zone: {selectedZones.includes("All") ? "All" : selectedZones.join(", ")}
               </button>
               <ul className="dropdown-menu rounded p-2" style={{ maxHeight: '300px', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
                 <li>
@@ -830,7 +830,7 @@ export default function App() {
                       onChange={() => handleZoneChange("All")}
                     />
                     <label className="form-check-label" htmlFor="zone-all">
-                      All
+                      All - ZONE
                     </label>
                   </div>
                 </li>
@@ -860,7 +860,7 @@ export default function App() {
                 data-bs-toggle="dropdown"
                 aria-expanded="false"
               >
-                {isLoading ? "Loading GMs..." : selectedGm}
+                GM: {isLoading ? "Loading GMs..." : selectedGm}
               </button>
               <ul className="dropdown-menu rounded">
                 {gms.map((gm, idx) => (
@@ -880,7 +880,7 @@ export default function App() {
                 data-bs-toggle="dropdown"
                 aria-expanded="false"
               >
-                {isLoading ? "Loading Hours..." : selectedHour}
+                Hrs: {isLoading ? "Loading Hours..." : selectedHour}
               </button>
               <ul className="dropdown-menu rounded">
                 {hours.map((hr, idx) => (

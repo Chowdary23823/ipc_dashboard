@@ -753,12 +753,12 @@ export default function App() {
             </div>
 
             <div className="btn-group me-3">
-              <button type="button" className="btn btn-light dropdown-toggle rounded" data-bs-toggle="dropdown" aria-expanded="false">{isLoading ? "Loading Zones..." : (selectedZones.includes("All") ? "All" : selectedZones.join(", "))}</button>
+              <button type="button" className="btn btn-light dropdown-toggle rounded" data-bs-toggle="dropdown" aria-expanded="false"> Zone: {isLoading ? "Loading Zones..." : (selectedZones.includes("All") ? "All" : selectedZones.join(", "))}</button>
               <ul className="dropdown-menu rounded p-2" style={{ maxHeight: '300px', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
                 <li>
                   <div className="form-check">
                     <input className="form-check-input" type="checkbox" id="zone-all" checked={selectedZones.includes("All")} onChange={() => handleZoneChange("All")} />
-                    <label className="form-check-label" htmlFor="zone-all">All</label>
+                    <label className="form-check-label" htmlFor="zone-all">All - ZONE</label>
                   </div>
                 </li>
                 {zones.length > 0 ? (
@@ -777,9 +777,9 @@ export default function App() {
             </div>
 
             <div className="btn-group me-3">
-              <button type="button" className="btn btn-light dropdown-toggle rounded" data-bs-toggle="dropdown" aria-expanded="false">{isLoading ? "Loading GMs..." : selectedGm}</button>
+              <button type="button" className="btn btn-light dropdown-toggle rounded" data-bs-toggle="dropdown" aria-expanded="false">GM: {isLoading ? "Loading GMs..." : selectedGm}</button>
               <ul className="dropdown-menu rounded">
-                <li><a className="dropdown-item" href="#" onClick={() => setSelectedGm("All")}>All</a></li>
+                <li><a className="dropdown-item" href="#" onClick={() => setSelectedGm("All")}>All - GM</a></li>
                 {gms.length > 0 ? (
                   gms.map((gm, idx) => (
                     <li key={idx}><a className="dropdown-item" href="#" onClick={() => setSelectedGm(gm)}>{gm}</a></li>
@@ -791,9 +791,9 @@ export default function App() {
             </div>
 
             <div className="btn-group me-3">
-              <button type="button" className="btn btn-light dropdown-toggle rounded" data-bs-toggle="dropdown" aria-expanded="false">{isLoading ? "Loading Hours..." : selectedHour || "No data"}</button>
+              <button type="button" className="btn btn-light dropdown-toggle rounded" data-bs-toggle="dropdown" aria-expanded="false">Hrs: {isLoading ? "Loading Hours..." : selectedHour || "No data"}</button>
               <ul className="dropdown-menu rounded">
-                <li><a className="dropdown-item" href="#" onClick={() => setSelectedHour("All")}>All</a></li>
+                <li><a className="dropdown-item" href="#" onClick={() => setSelectedHour("All")}>All - HRS</a></li>
                 {hours.length > 0 ? (
                   hours.map((hr, idx) => (
                     <li key={idx}><a className="dropdown-item" href="#" onClick={() => setSelectedHour(hr)}>{hr}</a></li>
