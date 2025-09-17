@@ -21,6 +21,7 @@
     "express": "^5.1.0",
     "google-auth-library": "^10.3.0",
     "googleapis": "^159.0.0",
+    "lucide-react": "^0.544.0",
     "module-name": "^0.0.1-security",
     "react": "^19.1.1",
     "react-apexcharts": "^1.7.0",
