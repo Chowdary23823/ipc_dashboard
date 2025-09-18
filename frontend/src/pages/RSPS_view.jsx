@@ -412,7 +412,7 @@ setPromisesData([]);
         return rowData;
       });
       
-      setPromisesData(parsedData);
+      setPromisesData(parsedDataPromises);
 
 
 

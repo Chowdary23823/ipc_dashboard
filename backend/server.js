@@ -18,6 +18,7 @@ let reliabilityweek = null; // For Reliability
 let eagleeye = null;  //eagle
 let FDP_view = null; //FDP
 let RSPS_view = null; //RSPS
+let executivesData = null;
 
 // Google Sheets auth
 const auth = new google.auth.GoogleAuth({
@@ -199,12 +200,43 @@ const fetchAndStoreRSPSMul = async () => { //RSPS
   }
 };
 
+const fetchAndStoreExecutives = async () => { //RSPS
+  try {
+    const client = await auth.getClient();
+    const sheets = google.sheets({ version: "v4", auth: client });
+
+    const spreadsheetId = "1enVTHFGgBz0IqL0VSHWynbcIZPn_Xf44ZuPvwdK1Qzs";
+    const sheetNames = ["Day_Start", "RSPS_Pendency","Promises","Reliability"];
+     
+    var sheetsData;
+
+    for (const name of sheetNames) {
+    const res = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: name, // whole sheet
+    });
+    
+    sheetData[name] = res.data;
+
+    console.log(`Data from from ${name}:`, name);
+    }
+
+    executivesData = sheetData;
+
+    console.log("Data for 'RSPS' successfully refreshed from Google Sheets.");
+  } catch (err) {
+    console.error("Failed to fetch 'RSPS' sheet data:", err.message);
+    executivesData = null;
+  }
+};
+
 // Initial data fetch when the server starts
 fetchAndStoreData();
 fetchDataForReliability();
 fetchAndStoreeagle();
 fetchAndStoreFDPMuiltiSheets();
 fetchAndStoreRSPSMul();
+fetchAndStoreExecutives();
 
 // Schedule data refresh every 60 seconds
 setInterval(fetchAndStoreData, 60000);
@@ -212,6 +244,7 @@ setInterval(fetchDataForReliability, 60000);
 setInterval(fetchAndStoreeagle, 60000);
 setInterval(fetchAndStoreFDPMuiltiSheets, 60000);
 setInterval(fetchAndStoreRSPSMul,60000);
+setInterval(fetchAndStoreExecutives,60000);
 
 // Root route to show the server is working
 app.get("/", (req, res) => {
@@ -299,6 +332,17 @@ app.get("/api/RSPS-data", (req, res) => { //RSPS
       error: "Data is not yet available or failed to load. Please try again in a few moments."
     });
   }
+});
+
+app.get("/api/executives-data", (req, res) => { //RSPS
+  if (executivesData) {
+    fetchAndStoreExecutives();
+    res.json(executivesData);
+  } else {
+    res.status(503).json({
+      error: "Data is not yet available or failed to load. Please try again in a few moments."
+    });
+  } 
 });
 
 app.listen(3001, () => console.log("Backend running on http://localhost:3001"));

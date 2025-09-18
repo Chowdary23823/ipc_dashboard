@@ -1,659 +1,561 @@
-import React, { useEffect, useState, useRef, useMemo } from "react";
+import React, { useState, useEffect } from "react";
+import "bootstrap/dist/css/bootstrap.min.css";
 
-// Load Bootstrap CSS and JS dynamically
-const Bootstrap = () => (
-  <>
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
-    />
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  </>
-);
 
-/* =========================== Helpers =========================== */
-const toNum = (v) => {
-  if (v === null || v === undefined) return 0;
-  if (typeof v === "number") return v;
-  const s = String(v).trim();
-  if (!s) return 0;
-  // Handle percentage strings (e.g., "101%") by removing the '%'
-  const cleaned = s.replace(/[, %]+/g, "");
-  const n = Number(cleaned);
-  return Number.isFinite(n) ? n : 0;
+const formatWithCommas = (value) => {
+  if (typeof value !== 'number' || isNaN(value)) {
+    return 'N/A';
+  }
+  return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 };
 
-const fmt = (n) => new Intl.NumberFormat("en-IN").format(Math.round(n));
+// New function to get a consistent light color for each card title
 
-const parseSheetDate = (s) => {
-  if (!s) return null;
-  if (s instanceof Date && !isNaN(s)) return toYMD(s);
-  const str = String(s).trim();
-  const isoMatch = str.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
-  if (isoMatch) {
-    const [_, y, m, d] = isoMatch;
-    const dt = new Date(Number(y), Number(m) - 1, Number(d));
-    if (!isNaN(dt)) return toYMD(dt);
-  }
-  const dmyMatch = str.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
-  if (dmyMatch) {
-    const [_, d, m, y] = dmyMatch;
-    const dt = new Date(Number(y), Number(m) - 1, Number(d));
-    if (!isNaN(dt)) return toYMD(dt);
-  }
-  const dt = new Date(str);
-  if (!isNaN(dt)) return toYMD(dt);
-  return null;
-};
 
-const toYMD = (d) => {
-  if (!(d instanceof Date) || isNaN(d)) return null;
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-};
+const Executives = ({ date, selectedZones, selectedGm, selectedHour, allData,dayStartData,promisesData,reliabilityData }) => {
+  const formatDate = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
 
-const lastNDates = (endYMD, n = 10) => {
-  const [y, m, d] = endYMD.split("-").map(Number);
-  const end = new Date(y, m - 1, d);
-  const arr = [];
-  for (let i = n - 1; i >= 0; i--) {
-    const t = new Date(end);
-    t.setDate(end.getDate() - i);
-    arr.push(toYMD(t));
-  }
-  return arr;
-};
+  const getFilteredData = (data,skipHours = false) => {
+    if (!data || data.length === 0 || !date) {
+      return [];
+    }
+    let filteredData = data.filter(item => {
+      const itemDate = item?.date;
+      const selectedDate = formatDate(date);
+      return itemDate === selectedDate;
+    });
+    if (selectedZones && selectedZones[0] !== "All" ) {
+      filteredData = filteredData.filter(item => selectedZones.includes(item?.zone));
+    }
+    if (selectedGm && selectedGm !== "All" ) {
+      filteredData = filteredData.filter(item => item?.gm === selectedGm);
+    }
+    if (selectedHour && selectedHour !== "All" && !skipHours) {
+      filteredData = filteredData.filter(item => {
+        const itemHour = parseInt(String(item?.hours).trim().split(' ')[0], 10);
+        return itemHour === parseInt(selectedHour, 10);
+      });
+    }
+    return filteredData;
+  };
 
-const sumBy = (rows, key) => rows.reduce((acc, r) => acc + toNum(r[key]), 0);
+  const calculateMetrics = (allData,dayStartData,promisesData) => {
+    const rspsPendencyData = getFilteredData(allData);
 
-const formatHeaderLabel = (ymd) => {
-  const [y, m, d] = ymd.split("-").map(Number);
-  const date = new Date(y, m - 1, d);
-  return date.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
-};
+    const dayStartSheetData = getFilteredData(dayStartData,true);
 
-/* =========================== KPI Cards =========================== */
+    const promisesSheetData = getFilteredData(promisesData,true);
 
-/* =========================== Header Component =========================== */
-const Header = ({
-  date,
-  setDate,
-  zones,
-  gms,
-  hours,
-  selectedZone,
-  setSelectedZone,
-  selectedGm,
-  setSelectedGm,
-  selectedHour,
-  setSelectedHour,
-  isLoading,
-  error,
-}) => {
-  const handleDateChange = (e) => {
-    const newDate = e.target.value ? new Date(e.target.value) : new Date();
-    setDate(newDate);
-    // Resetting GM and Hour filters here is a good practice to prevent stale data
-    setSelectedZone("All");
-    setSelectedGm("All");
-    setSelectedHour("All");
-  };
-  const formattedDate = date ? toYMD(date) : "";
+    const overallDaystart = dayStartSheetData.reduce((sum, item) => sum + (item.overall_daystart || 0), 0);
+    const cpdDaystart = dayStartSheetData.reduce((sum, item) => sum + (item.day_start_cpd || 0), 0);
+    const eobDaystart = dayStartSheetData.reduce((sum, item) => sum + (item.day_start_eob || 0), 0);
+    const ipd3Daystart = dayStartSheetData.reduce((sum, item) => sum + (item.day_start_ipd3 || 0), 0);
+    const ipd3PlusDaystart = dayStartSheetData.reduce((sum, item) => sum + (item.day_start_ipd3plus || 0), 0);
+    const fpdDaystart = dayStartSheetData.reduce((sum, item) => sum + (item.day_start_fpd || 0), 0);
+    
+    
+    const overallPendency = rspsPendencyData.reduce((sum, item) => sum + (item.overall_pendency || 0), 0);
+    const cpdPendency = rspsPendencyData.reduce((sum, item) => sum + (item.cpd_pendency || 0), 0);
+    const eobPendency = rspsPendencyData.reduce((sum, item) => sum + (item.eob_pendency || 0), 0);
+    const ipd3Pendency = rspsPendencyData.reduce((sum, item) => sum + (item.ipd3_pendency || 0), 0);
+    const ipd3PlusPendency = rspsPendencyData.reduce((sum, item) => sum + (item.ipd3plus_pendency || 0), 0);
+    const fpdPendency = rspsPendencyData.reduce((sum, item) => sum + (item.fpd_pendency || 0), 0);
+    const ncd = rspsPendencyData.reduce((sum, item) => sum + (item.ncd || 0), 0);
+    const cd = rspsPendencyData.reduce((sum, item) => sum + (item.cd || 0), 0);
 
-  return (
-    <nav className="navbar navbar-expand-lg navbar-dark bg-primary sticky-top  shadow">
-      <div className="container-fluid">
-        <a className="navbar-brand d-flex align-items-center" href="#">
-          <img
-            src="Ekart Logo White.png"
-            alt="eKart Logo"
-            height="40"
-            className="me-2"
-          />
-        </a>
-        <div className="d-flex align-items-center">
-          {/* Date Picker */}
-          <div className="btn-group me-3 position-relative">
-            <input
-              type="date"
-              className="form-control rounded-pill"
-              value={formattedDate}
-              onChange={handleDateChange}
-            />
-          </div>
+const promisesFiltredData = promisesSheetData.reduce((sum, item) => sum + (item.promises || 0), 0);
+    
+    return {
+      overallDaystart,
+      cpdDaystart,
+      eobDaystart,
+      ipd3Daystart,
+      ipd3PlusDaystart,
+      fpdDaystart,
+      overallPendency,
+      cpdPendency,
+      eobPendency,
+      ipd3Pendency,
+      ipd3PlusPendency,
+      fpdPendency,
+promisesFiltredData,
+ncd,
+cd
+    };
+  };
 
-          {/* Zone Dropdown */}
-          <div className="btn-group me-3">
-            <button
-              type="button"
-              className="btn btn-light dropdown-toggle rounded-pill"
-              data-bs-toggle="dropdown"
-              aria-expanded="false"
-            >
-              Zone: {isLoading ? "Loading..." : selectedZone}
-            </button>
-            <ul className="dropdown-menu rounded shadow">
-              <li>
-                <a
-                  className="dropdown-item"
-                  href="#"
-                  onClick={() => setSelectedZone("All")}
-                >
-                  All - ZONE
-                </a>
-              </li>
-              {error ? (
-                <li>
-                  <a className="dropdown-item text-danger" href="#">
-                    {error}
-                  </a>
-                </li>
-              ) : zones.length > 0 ? (
-                zones.map((zone, idx) => (
-                  <li key={idx}>
-                    <a
-                      className="dropdown-item"
-                      href="#"
-                      onClick={() => setSelectedZone(zone)}
-                    >
-                      {zone}
-                    </a>
-                  </li>
-                ))
-              ) : (
-                <li>
-                  <a className="dropdown-item text-danger" href="#">
-                    No data
-                  </a>
-                </li>
-              )}
-            </ul>
-          </div>
+  let metrics = calculateMetrics(allData,dayStartData,promisesData);
 
-          {/* GM Dropdown */}
-          <div className="btn-group me-3">
-            <button
-              type="button"
-              className="btn btn-light dropdown-toggle rounded-pill"
-              data-bs-toggle="dropdown"
-              aria-expanded="false"
-            >
-              GM: {isLoading ? "Loading..." : selectedGm}
-            </button>
-            <ul className="dropdown-menu rounded shadow">
-              <li>
-                <a
-                  className="dropdown-item"
-                  href="#"
-                  onClick={() => setSelectedGm("All")}
-                >
-                  All - GM
-                </a>
-              </li>
-              {gms.length > 0 ? (
-                gms.map((gm, idx) => (
-                  <li key={idx}>
-                    <a
-                      className="dropdown-item"
-                      href="#"
-                      onClick={() => setSelectedGm(gm)}
-                    >
-                      {gm}
-                    </a>
-                  </li>
-                ))
-              ) : (
-                <li>
-                  <a className="dropdown-item text-danger" href="#">
-                    No data
-                  </a>
-                </li>
-              )}
-            </ul>
-          </div>
+  const getPercentage = (divident, divisor) => {
+    if (divisor === 0) return "0%";
+    const percentage = ((divident / divisor) * 100).toFixed(2);
+    return `${percentage}%`;
+  };
 
-          {/* Hour Dropdown */}
-          <div className="btn-group me-3">
-            <button
-              type="button"
-              className="btn btn-light dropdown-toggle rounded-pill"
-              data-bs-toggle="dropdown"
-              aria-expanded="false"
-            >
-              Hrs: {isLoading ? "Loading..." : selectedHour || "All"}
-            </button>
-            <ul className="dropdown-menu rounded shadow">
-              <li>
-                <a
-                  className="dropdown-item"
-                  href="#"
-                  onClick={() => setSelectedHour("All")}
-                >
-                  All - Hrs
-                </a>
-              </li>
-              {hours.length > 0 ? (
-                hours.map((hr, idx) => (
-                  <li key={idx}>
-                    <a
-                      className="dropdown-item"
-                      href="#"
-                      onClick={() => setSelectedHour(hr)}
-                    >
-                      {hr}
-                    </a>
-                  </li>
-                ))
-              ) : (
-                <li>
-                  <a className="dropdown-item text-danger" href="#">
-                    No data
-                  </a>
-                </li>
-              )}
-            </ul>
-          </div>
-        </div>
-      </div>
-    </nav>
-  );
-};
+let dashboardData = [
+    {
+      category: "Overall",
+      metrics: [
+        { title: "Overall DayStart", value: metrics.overallDaystart },
+        { title: "Overall Pendency", value: metrics.overallPendency, percentage: getPercentage(metrics.overallPendency, metrics.overallDaystart) },
+      ],
+    },
+    {
+      category: "CPD",
+      metrics: [
+        { title: "Day Start-CPD", value: metrics.cpdDaystart },
+        { title: "CPD-Pendency", value: metrics.cpdPendency, percentage: getPercentage(metrics.cpdPendency, metrics.cpdDaystart) },
+        { title: "CPD -Attempted_&Marked_NCD", value: metrics.ncd ? metrics.ncd : 0 },
+        { title: "CPD -Attempted_&_Marked_CD", value: metrics.cd ? metrics.cd : 0 },
+      ],
+    },
+    {
+      category: "EOB",
+      metrics: [
+        { title: "Day Start-EOB", value: metrics.eobDaystart },
+        { title: "EOB-Pendency", value: metrics.eobPendency, percentage: getPercentage(metrics.eobPendency, metrics.eobDaystart) },
+      ],
+    },
+    {
+      category: "IPD3",
+      metrics: [
+        { title: "Day Start-IPD3", value: metrics.ipd3Daystart },
+        { title: "IPD3-Pendency", value: metrics.ipd3Pendency, percentage: getPercentage(metrics.ipd3Pendency, metrics.ipd3Daystart) },
+      ],
+    },
+    {
+      category: "IPD3+",
+      metrics: [
+        { title: "Day Start-IPD3+", value: metrics.ipd3PlusDaystart },
+        { title: "IPD3+-Pendency", value: metrics.ipd3PlusPendency, percentage: getPercentage(metrics.ipd3PlusPendency, metrics.ipd3PlusDaystart) },
+      ],
+    },
+    {
+      category: "FPD",
+      metrics: [
+        { title: "DayStart-FPD", value: metrics.fpdDaystart },
+        { title: "FPD-Pendency", value: metrics.fpdPendency, percentage: getPercentage(metrics.fpdPendency, metrics.fpdDaystart) },
+      ],
+    },
+  ];
 
-/* =========================== ApexChartComponent =========================== */
-const ApexChartComponent = ({ chartData }) => {
-  const chartRef = useRef(null);
-  const chartInstance = useRef(null);
+const RefreshDashBoard=()=>{
+    metrics = calculateMetrics(allData,dayStartData,promisesData);
 
-  useEffect(() => {
-    const renderChart = () => {
-      if (!chartRef.current || !window.ApexCharts) return;
-
-      chartInstance.current?.destroy();
-
-      const planData = chartData.plan.map(Number);
-      const actualData = chartData.actual.map(Number);
-      const attainmentData = chartData.attainment.map(Number);
-
-      const options = {
-        series: [
-          { name: "Plan", type: "column", data: planData },
-          { name: "Actual", type: "column", data: actualData },
-          { name: "Attainment %", type: "line", data: attainmentData },
-        ],
-        chart: {
-          height: 350,
-          type: "line",
-          stacked: false,
-          toolbar: { show: false },
-        },
-        dataLabels: { enabled: false },
-        stroke: { width: [1, 1, 3] },
-        title: {
-          text: "Attainment Daily Analysis (Last 10 Days)",
-          align: "left",
-          offsetX: 110,
-          style: { fontWeight: "bold" },
-        },
-        xaxis: { categories: chartData.headers },
-        yaxis: [
-          {
-            seriesName: "Plan",
-            axisTicks: { show: true },
-            axisBorder: { show: true, color: "#008FFB" },
-            labels: { style: { colors: "#008FFB" } },
-            title: { text: "Plan", style: { color: "#008FFB" } },
-          },
-          {
-            seriesName: "Actual",
-            opposite: true,
-            axisTicks: { show: true },
-            axisBorder: { show: true, color: "#00E396" },
-            labels: { style: { colors: "#00E396" } },
-            title: { text: "Actual", style: { color: "#00E396" } },
-          },
-          {
-            seriesName: "Attainment %",
-            opposite: true,
-            axisTicks: { show: true },
-            axisBorder: { show: true, color: "#FEB019" },
-            labels: { style: { colors: "#FEB019" } },
-            title: { text: "Attainment %", style: { color: "#FEB019" } },
-          },
-        ],
-        legend: { horizontalAlign: "left", offsetX: 40 },
-      };
-
-      chartInstance.current = new window.ApexCharts(chartRef.current, options);
-      chartInstance.current.render();
-    };
-
-    if (!window.ApexCharts) {
-      const script = document.createElement("script");
-      script.src = "https://cdn.jsdelivr.net/npm/apexcharts";
-      script.onload = renderChart;
-      document.body.appendChild(script);
-    } else {
-      renderChart();
-    }
-
-    return () => chartInstance.current?.destroy();
-  }, [chartData]);
-
-  return <div ref={chartRef} />;
-};
-
-/* =========================== Main Component =========================== */
-export function Executives() {
-  const [rawRows, setRawRows] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  const [date, setDate] = useState(new Date());
-  const [selectedZone, setSelectedZone] = useState("All");
-  const [selectedGm, setSelectedGm] = useState("All");
-  const [selectedHour, setSelectedHour] = useState("All");
-
-  const [eventStartDate, setEventStartDate] = useState("2025-09-22");
-  const [eventEndDate, setEventEndDate] = useState("2025-10-15");
-
-  const [zones, setZones] = useState([]);
-  const [gms, setGms] = useState([]);
-  const [hours, setHours] = useState([]);
-
-  const fetchSheet = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const url = "http://localhost:3001/api/sheets-data";
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const js = await res.json();
-      const values = js.values || [];
-      if (values.length < 2) throw new Error("No data");
-
-      const headers = values[0];
-      const rows = values.slice(1);
-
-      const objRows = rows
-        .map((r) => {
-          const obj = {};
-          headers.forEach((h, i) => {
-            obj[String(h || "").trim()] = r[i] ?? "";
-          });
-          const norm = {};
-          const get = (name) => {
-            const k = Object.keys(obj).find(
-              (h) => h.toLowerCase() === name.toLowerCase()
-            );
-            return k ? obj[k] : "";
-          };
-          norm.Date = parseSheetDate(get("Date"));
-          norm.Zone = get("Zone") || get("Zonal") || get("Region") || "";
-          norm.GM = get("GM") || get("General Manager") || "";
-          norm.Hour = get("Hour") || get("Time") || "";
-          norm.Region = get("Region") || "";
-          norm.Plan = toNum(get("Plan"));
-          norm.Actual = toNum(get("Actual"));
-          norm.DailyAttainment = toNum(get("Daily Attainment"));
-          norm.EventAttainment = toNum(get("Event Attainment"));
-          norm[">120Attainment Hubs"] = toNum(get(">120 Attainment Hubs"));
-          norm["<120Attainment Hubs"] = toNum(get("<120 Attainment Hubs"));
-          return norm;
-        })
-        .filter((r) => r.Date);
-
-      setRawRows(objRows);
-      setLoading(false);
-    } catch (e) {
-      console.error(e);
-      setError(
-        "Failed to load data. Please check the backend server is running."
-      );
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchSheet();
-  }, []);
-
-  const selectedYMD = useMemo(() => toYMD(date), [date]);
-
-  // Main filtered data based on all selections (Date, Zone, GM, Hour)
-  const rowsForDate = useMemo(() => {
-    let filteredData = rawRows.filter((r) => r.Date === selectedYMD);
-
-    if (selectedZone !== "All") {
-      filteredData = filteredData.filter(
-        (r) => String(r.Zone).toLowerCase() === String(selectedZone).toLowerCase()
-      );
-    }
-
-    if (selectedGm !== "All") {
-      filteredData = filteredData.filter(
-        (r) => String(r.GM).toLowerCase() === String(selectedGm).toLowerCase()
-      );
-    }
-
-    if (selectedHour !== "All") {
-      filteredData = filteredData.filter(
-        (r) => String(r.Hour) === String(selectedHour)
-      );
-    }
-
-    return filteredData;
-  }, [rawRows, selectedYMD, selectedZone, selectedGm, selectedHour]);
-
-  // A separate, unfiltered list of rows for the selected date to calculate the fixed Daily Attainment KPI
-  const rowsForDailyAttainment = useMemo(() => {
-    return rawRows.filter((r) => r.Date === selectedYMD);
-  }, [rawRows, selectedYMD]);
-
-  // Effect to update dropdown options based on current filters
-  useEffect(() => {
-    let filteredByDate = rawRows.filter((r) => r.Date === selectedYMD);
-
-    // Filter zones for the dropdown
-    const z = Array.from(
-      new Set(filteredByDate.map((r) => r.Zone).filter(Boolean))
-    ).sort();
-    setZones(z);
-
-    // Filter by the selected zone to populate GM and Hour dropdowns
-    const filteredByZone =
-      selectedZone === "All"
-        ? filteredByDate
-        : filteredByDate.filter((r) => String(r.Zone).toLowerCase() === String(selectedZone).toLowerCase());
-
-    // Get unique GMs, filtering out empty strings and "0"
-    const g = Array.from(
-      new Set(filteredByZone.map((r) => r.GM).filter(Boolean))
-    )
-      .filter((gm) => gm !== "0")
-      .sort();
-    setGms(g);
-
-    // Get unique Hours, filtering out empty strings and "0"
-    const h = Array.from(
-      new Set(filteredByZone.map((r) => r.Hour).filter(Boolean))
-    )
-      .filter((hour) => hour !== "0")
-      .sort();
-    setHours(h);
-
-    // Reset selected GM and Hour if the current selection is no longer available
-    if (selectedGm !== "All" && !g.includes(selectedGm)) {
-      setSelectedGm("All");
-    }
-    if (selectedHour !== "All" && !h.includes(selectedHour)) {
-      setSelectedHour("All");
-    }
-  }, [rawRows, selectedYMD, selectedZone, selectedGm, selectedHour]);
-
-  const regions = ["EAST", "WEST", "NORTH", "SOUTH"];
-
-  const regionData = regions.map((reg) => {
-    const rows = rowsForDate.filter(
-      (r) => (r.Region || "").toUpperCase() === reg.toUpperCase()
-    );
-    const plan = sumBy(rows, "Plan");
-    const actual = sumBy(rows, "Actual");
-    const attainmentPct = plan > 0 ? (actual / plan) * 100 : 0;
-    return { region: reg, plan, actual, attainmentPct };
-  });
-
-  const dailyBuckets = useMemo(() => {
-    const days = lastNDates(selectedYMD, 10);
-    return days.map((ymd) => {
-      let base = rawRows.filter((r) => r.Date === ymd);
-      
-      if (selectedZone !== "All") {
-        base = base.filter((r) => String(r.Zone).toLowerCase() === String(selectedZone).toLowerCase());
-      }
-      
-      if (selectedGm !== "All") {
-        base = base.filter((r) => String(r.GM).toLowerCase() === String(selectedGm).toLowerCase());
-      }
-      
-      if (selectedHour !== "All") {
-        base = base.filter((r) => String(r.Hour) === String(selectedHour));
-      }
-
-      const plan = sumBy(base, "Plan");
-      const actual = sumBy(base, "Actual");
-      const attainment = plan > 0 ? (actual / plan) * 100 : 0;
-      return { ymd, plan, actual, attainment };
-    });
-  }, [rawRows, selectedYMD, selectedZone, selectedGm, selectedHour]);
-
-  const tableData = useMemo(() => {
-    const headers = dailyBuckets.map((d) => formatHeaderLabel(d.ymd));
-    const plan = dailyBuckets.map((d) => Math.round(d.plan));
-    const actual = dailyBuckets.map((d) => Math.round(d.actual));
-    const attainment = dailyBuckets.map((d) => Number(d.attainment.toFixed(2)));
-    return { headers, plan, actual, attainment };
-  }, [dailyBuckets]);
-
-  return (
-    <div>
-      <Bootstrap />
-      <Header
-        date={date}
-        setDate={setDate}
-        zones={zones}
-        gms={gms}
-        hours={hours}
-        selectedZone={selectedZone}
-        setSelectedZone={setSelectedZone}
-        selectedGm={selectedGm}
-        setSelectedGm={setSelectedGm}
-        selectedHour={selectedHour}
-        setSelectedHour={setSelectedHour}
-        isLoading={loading}
-        error={error}
-      />
-
-      {error ? (
-        <div className="alert alert-danger mt-3">{error}</div>
-      ) : (
-        <div className="cswrap">
-          {/* Region Cards */}
-          <div className="row mt-3">
-            {regionData.map((reg, idx) => (
-              <div key={idx} className="col-md-3 mb-3">
-                <div className="card shadow rounded-3 border-0">
-                  <div className="card-body text-center">
-                    <h5 className="card-title fw-bold">{reg.region}</h5>
-                    <p className="mb-1 text-muted">Plan: {fmt(reg.plan)}</p>
-                    <p className="mb-1 text-success">
-                      Actual: {fmt(reg.actual)}
-                    </p>
-                    <p
-                      className={`mb-0 fw-bold ${
-                        reg.attainmentPct >= 100
-                          ? "text-success"
-                          : "text-danger"
-                      }`}
-                    >
-                      Attainment: {reg.attainmentPct.toFixed(2)}%
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* KPI Cards */}
-          
-
-          {/* Chart */}
-          <div className="mt-4" style={{display:"flex"}}>
-            <div style={{width:"90vw"}}>
-            {loading ? (
-              <div className="alert alert-info">Loading chart data...</div>
-            ) : (
-              <ApexChartComponent chartData={tableData} />
-            )}
-            </div>
-
-            <KPICards
-            rawRows={rawRows}
-            rowsForDate={rowsForDate}
-            rowsForDailyAttainment={rowsForDailyAttainment}
-            selectedDate={selectedYMD}
-            isLoading={loading}
-            eventStartDate={eventStartDate}
-            eventEndDate={eventEndDate}
-            setEventStartDate={setEventStartDate}
-            setEventEndDate={setEventEndDate}
-          />
-          </div>
-
-          
-
-          {/* Table */}
-          <div className="mt-4 table-responsive">
-            <table className="table table-bordered table-hover align-middle">
-              <thead className="table-light">
-                <tr>
-                  <th>Metric</th>
-                  {tableData.headers.map((h, idx) => (
-                    <th key={idx}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>Plan</td>
-                  {tableData.plan.map((v, idx) => (
-                    <td key={idx}>{fmt(v)}</td>
-                  ))}
-                </tr>
-                <tr>
-                  <td>Actual</td>
-                  {tableData.actual.map((v, idx) => (
-                    <td key={idx}>{fmt(v)}</td>
-                  ))}
-                </tr>
-                <tr>
-                  <td>Attainment %</td>
-                  {tableData.attainment.map((v, idx) => (
-                    <td key={idx}>{v.toFixed(2)}%</td>
-                  ))}
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+    dashboardData = [
+    {
+      category: "Overall",
+      metrics: [
+        { title: "Overall DayStart", value: metrics.overallDaystart },
+        { title: "Overall Pendency", value: metrics.overallPendency, percentage: getPercentage(metrics.overallPendency, metrics.overallDaystart) },
+      ],
+    },
+    {
+      category: "CPD",
+      metrics: [
+        { title: "Day Start-CPD", value: metrics.cpdDaystart },
+        { title: "CPD-Pendency", value: metrics.cpdPendency, percentage: getPercentage(metrics.cpdPendency, metrics.cpdDaystart) },
+        { title: "CPD -Attempted_&Marked_NCD", value: metrics.ncd ? metrics.ncd : 0 },
+        { title: "CPD -Attempted_&_Marked_CD", value: metrics.cd ? metrics.cd : 0 },
+      ],
+    },
+    {
+      category: "EOB",
+      metrics: [
+        { title: "Day Start-EOB", value: metrics.eobDaystart },
+        { title: "EOB-Pendency", value: metrics.eobPendency, percentage: getPercentage(metrics.eobPendency, metrics.eobDaystart) },
+      ],
+    },
+    {
+      category: "IPD3",
+      metrics: [
+        { title: "Day Start-IPD3", value: metrics.ipd3Daystart },
+        { title: "IPD3-Pendency", value: metrics.ipd3Pendency, percentage: getPercentage(metrics.ipd3Pendency, metrics.ipd3Daystart) },
+      ],
+    },
+    {
+      category: "IPD3+",
+      metrics: [
+        { title: "Day Start-IPD3+", value: metrics.ipd3PlusDaystart },
+        { title: "IPD3+-Pendency", value: metrics.ipd3PlusPendency, percentage: getPercentage(metrics.ipd3PlusPendency, metrics.ipd3PlusDaystart) },
+      ],
+    },
+    {
+      category: "FPD",
+      metrics: [
+        { title: "DayStart-FPD", value: metrics.fpdDaystart },
+        { title: "FPD-Pendency", value: metrics.fpdPendency, percentage: getPercentage(metrics.fpdPendency, metrics.fpdDaystart) },
+      ],
+    },
+  ];
 }
 
-export default Executives;
+useEffect(()=>{
+    RefreshDashBoard();
+},[allData])
+
+  
+
+  return (
+    <div className="container-fluid py-3" style={{ backgroundColor: "#f8f9fa", fontFamily: "'Roboto', sans-serif" }}>
+      <div className="card shadow-lg p-4 rounded-4" style={{ backgroundColor: "white", marginLeft: "250px"}}>
+        <table className="table">
+          <tbody>
+            {dashboardData.map((row, rowIndex) => (
+              <tr key={rowIndex}>
+                <td className="align-middle">
+                  <h5 className="fw-bold text-muted">{row.category}</h5>
+                </td>
+                <td className="w-250">
+                  <div className="d-flex flex-wrap gap-3">
+                    {row.metrics.map((metric, metricIndex) => (
+                      <div key={metricIndex} style={{ width: "200px"}}>
+                        <StatCard
+                          title={metric.title}
+                          mainValue={metric.value}
+                          percentage={metric.percentage}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
+export default function Main() {
+    const ALLOWED_ZONES = ['East', 'West', 'North', 'South'];
+  const [date, setDate] = useState(new Date());
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [allData, setAllData] = useState([]);
+  const [zones, setZones] = useState(ALLOWED_ZONES);
+  const [gms, setGms] = useState([]);
+  const [hours, setHours] = useState([]);
+  const [selectedZones, setSelectedZones] = useState("All");
+  const [selectedGm, setSelectedGm] = useState("All");
+  const [selectedHour, setSelectedHour] = useState("All");
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+const [dayStartData,setDayStartData] = useState([]);
+const [promisesData,setPromisesData] = useState([]);
+const [reliabilityData,setReliabilityData] = useState([]);
+
+  
+  const API_URL = "http://localhost:3001/api/executives-data";
+
+  const fetchData = async () => {
+    try {
+      const response = await fetch(API_URL);
+      if (!response.ok) {
+        throw new Error("Failed to load data from server.");
+      }
+      const data = await response.json();
+
+      const rspsPendencyData = data['RSPS_Pendency']?.values;
+
+
+    const dayStartData = data['Day_Start']?.values;
+
+    const promisesData = data['Promises']?.values;
+
+    const reliabilitySheetData = data['Reliability']?.values;
+
+
+
+
+      if (!rspsPendencyData || rspsPendencyData.length < 2) {
+        setAllData([]);
+        setZones([]);
+        setGms([]);
+        setHours([]);
+        setError("No data");
+        setSelectedZones("All");
+        setSelectedGm("All");
+        setSelectedHour("All");
+        setIsLoading(false);
+setDayStartData([]);
+setPromisesData([]);
+        return;
+      }
+
+      const headers = rspsPendencyData[0].map(h => String(h).trim().toLowerCase().replace(/ /g, "_"));
+      
+    const getHeaderIndex = (name) => headers.indexOf(name.trim().toLowerCase().replace(/ /g, "_"));
+      
+    const rows = rspsPendencyData.slice(1);
+      
+      const parsedData = rows.map((row) => {
+        const rowData = {};
+        rowData.zone = row[getHeaderIndex("zone")] || "";
+        rowData.gm = row[getHeaderIndex("gm")] || "";
+        
+        rowData.cpd_pendency = parseFloat(String(row[getHeaderIndex("cpd-pendency")]).replace(/,/g, '') || 0);
+        rowData.date = row[getHeaderIndex("date")] || "";
+        rowData.hours = row[getHeaderIndex("hour")] || "";
+        return rowData;
+      });
+      
+      setAllData(parsedData);
+
+    const headersDayStart = dayStartData[0].map(h => String(h).trim().toLowerCase().replace(/ /g, "_"));
+      
+    const getHeaderIndexOfDayStart = (name) => headersDayStart.indexOf(name.trim().toLowerCase().replace(/ /g, "_"));
+      
+    const rowsOfDayStart = dayStartData.slice(1);
+      
+      const parsedDataOfDayStart = rowsOfDayStart.map((row) => {
+        const rowData = {};
+        rowData.zone = row[getHeaderIndexOfDayStart("zone")] || "";
+        rowData.gm = row[getHeaderIndexOfDayStart("gm")] || "";
+        
+        rowData.day_start_cpd = parseFloat(String(row[getHeaderIndexOfDayStart("day_start-cpd")]).replace(/,/g, '') || 0);
+        
+        rowData.date = row[getHeaderIndexOfDayStart("date")] || "";
+        rowData.hours = row[getHeaderIndexOfDayStart("hour")] || "";
+        return rowData;
+      });
+      
+      setDayStartData(parsedDataOfDayStart);
+
+    const headersPromises = promisesData[0].map(h => String(h).trim().toLowerCase().replace(/ /g, "_"));
+      
+    const getHeaderIndexPromises = (name) => headersPromises.indexOf(name.trim().toLowerCase().replace(/ /g, "_"));
+      
+    const rowsPromises = promisesData.slice(1);
+      
+      const parsedDataPromises = rowsPromises.map((row) => {
+        const rowData = {};
+        rowData.zone = row[getHeaderIndexPromises("zone")] || "";
+        rowData.gm = row[getHeaderIndexPromises("gm")] || "";
+        
+        rowData.promises = parseFloat(String(row[getHeaderIndexPromises("promises")]).replace(/,/g, '') || 0);
+        
+        rowData.date = row[getHeaderIndexPromises("date")] || "";
+        return rowData;
+      });
+      
+      setPromisesData(parsedDataPromises);
+
+    const headersReliability = reliabilitySheetData[0].map(h => String(h).trim().toLowerCase().replace(/ /g, "_"));
+      
+    const getHeaderIndexReliability = (name) => headersReliability.indexOf(name.trim().toLowerCase().replace(/ /g, "_"));
+      
+    const rowsReliability = reliabilitySheetData.slice(1);
+      
+      const parsedDataReliability = rowsReliability.map((row) => {
+        const rowData = {};
+        rowData.zone = row[getHeaderIndexReliability("zone")] || "";
+        rowData.gm = row[getHeaderIndexReliability("gm")] || "";
+        
+        rowData.ofd = parseFloat(String(row[getHeaderIndexReliability("ofd")]).replace(/,/g, '') || 0);
+        
+        rowData.date = row[getHeaderIndexReliability("date")] || "";
+     rowData.hours = row[getHeaderIndexOfDayStart("hour")] || "";
+        return rowData;
+      });
+      
+      setReliabilityData(parsedDataReliability);
+
+
+
+        
+      setIsLoading(false);
+    } catch (e) {
+      setError("Failed to load Google Sheet data. Ensure the backend server is running.");
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    if (!allData || allData.length === 0 || !date) {
+      setZones([]);
+      setGms(["All"]);
+      setHours(["All"]);
+      setSelectedGm("All");
+      setSelectedHour("All");
+      return;
+    }
+    const formatDate = (date) => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+    const selectedDate = formatDate(date);
+
+    const selectedDateData = allData.filter(item => item.date === selectedDate);
+    
+    // Update available zones based on selected date data
+    const uniqueZones = [...new Set(selectedDateData.map(item => String(item.zone).trim()))]
+      .filter(zone => ALLOWED_ZONES.map(z => z.toLowerCase()).includes(zone.toLowerCase()) && zone !== "");
+    setZones(["All", ...uniqueZones.sort()]);
+
+    const filteredDataByZone = selectedZones === "All"
+      ? selectedDateData
+      : selectedDateData.filter(item => item.zone === selectedZones);
+
+    const gmsForZone = [...new Set(filteredDataByZone.map(item => item.gm))].filter(Boolean).sort();
+    setGms(["All", ...gmsForZone]);
+
+    const hoursForZone = [...new Set(filteredDataByZone.map(item => {
+      const hourString = String(item.hours).trim();
+      const parts = hourString.split(' ')[0];
+      return parseInt(parts, 10);
+    }))]
+      .filter(hour => hour && !isNaN(hour))
+      .sort((a, b) => a - b);
+    setHours(["All", ...hoursForZone]);
+    
+    // Reset selected GM and Hour if the current selection is no longer valid for the new filters
+    if (selectedGm !== "All" && !gmsForZone.includes(selectedGm)) {
+      setSelectedGm("All");
+    }
+    if (selectedHour !== "All" && !hoursForZone.includes(parseInt(selectedHour, 10))) {
+      setSelectedHour("All");
+    }
+  }, [date, allData, selectedZones]);
+
+  const handleZoneChange = (zone) => {
+    setSelectedZones(zone);
+  };
+
+  return (
+    <>
+      <nav className="navbar navbar-expand-lg navbar-dark bg-primary sticky-top" style={{fontFamily: "'Roboto', sans-serif"}}>
+        <div className="container-fluid">
+          <a className="navbar-brand d-flex align-items-center" href="#">
+            <img
+              src="Ekart Logo White.png"
+              alt="eKart Logo"
+              height="40"
+              className="me-2"
+            />
+          </a>
+          <div className="d-flex align-items-center">
+            <div className="btn-group me-3 position-relative">
+              <button
+                type="button"
+                className="btn btn-light dropdown-toggle rounded"
+                onClick={() => setShowCalendar(!showCalendar)}
+              >
+                {date ? date.toDateString() : "Select Date"}
+              </button>
+              {showCalendar && (
+                <div
+                  className="dropdown-menu p-2 show rounded"
+                  style={{ position: "absolute", top: "100%", left: 0, zIndex: 1000, backgroundColor: "#fff" }}
+                >
+                  <input
+                    type="date"
+                    className="form-control"
+                    value={date ? date.toISOString().split("T")[0] : ""}
+                    onChange={(e) => {
+                      setDate(new Date(e.target.value));
+                      setShowCalendar(false);
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+            {/* Zone Dropdown */}
+            <div className="btn-group me-3">
+              <button
+                type="button"
+                className="btn btn-light dropdown-toggle rounded"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
+                Zone: {isLoading ? "Loading Zones..." : selectedZones}
+              </button>
+              <ul className="dropdown-menu rounded">
+                {zones.map((zone, idx) => (
+                  <li key={idx}>
+                    <a className="dropdown-item" href="#" onClick={() => handleZoneChange(zone)}>
+                      {zone}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            {/* GM Dropdown */}
+            <div className="btn-group me-3">
+              <button
+                type="button"
+                className="btn btn-light dropdown-toggle rounded"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
+                GM: {isLoading ? "Loading GMs..." : selectedGm}
+              </button>
+              <ul className="dropdown-menu rounded">
+                {gms.map((gm, idx) => (
+                  <li key={idx}>
+                    <a className="dropdown-item" href="#" onClick={() => setSelectedGm(gm)}>
+                      {gm}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            {/* Hour Dropdown */}
+            <div className="btn-group me-3">
+              <button
+                type="button"
+                className="btn btn-light dropdown-toggle rounded"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
+                Hrs: {isLoading ? "Loading Hours..." : selectedHour}
+              </button>
+              <ul className="dropdown-menu rounded">
+                {hours.map((hr, idx) => (
+                  <li key={idx}>
+                    <a className="dropdown-item" href="#" onClick={() => setSelectedHour(hr)}>
+                      {hr}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </nav>
+      {isLoading || allData == undefined || dayStartData ==undefined || promisesData == undefined ? (
+        <div className="d-flex justify-content-center align-items-center" style={{ height: '80vh' }}>
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+        </div>
+      ) : error ? (
+        <div className="alert alert-danger m-4" role="alert">
+          {error}
+        </div>
+      ) : (
+        <Executives
+          selectedZones={selectedZones === "All" ? ["All"] : [selectedZones]}
+          selectedGm={selectedGm}
+          selectedHour={selectedHour}
+          date={date}
+          allData={allData}
+        dayStartData={dayStartData}
+        promisesData={promisesData}
+        reliabilityData={reliabilityData}
+        />
+      )}
+    </>
+  );
+}
