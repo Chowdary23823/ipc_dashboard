@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { ChevronRight } from "lucide-react"; // Arrow icon
 
 const links = [
+   {path: "/Executives", label: "Executives" },
   { path: "/attainment", label: "Attainment" },
   {
     label: "OFD",

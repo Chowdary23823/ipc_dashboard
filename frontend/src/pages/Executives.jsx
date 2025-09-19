@@ -1,239 +1,208 @@
-import React, { useState, useEffect } from "react";
+import React, { useMemo,useState,useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 
+const columnNames = [
+  "ZONE",
+  "GM",
+  "Daystart_cpd",
+  "RSPS_Pendency",
+  "Promises",
+  "Pendency_pe",
+  "OFD",
+  "Delivered",
+  "Conversion",
+  "Availability",
+  "Landing",
+];
 
-const formatWithCommas = (value) => {
-  if (typeof value !== 'number' || isNaN(value)) {
-    return 'N/A';
-  }
-  return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-};
+// Helper to safely sum numbers
+const sum = (arr) => arr.reduce((a, b) => a + (parseFloat(b) || 0), 0);
 
-// New function to get a consistent light color for each card title
+export function Executives({
+  date,
+  selectedZones,
+  selectedGm,
+  selectedHour,
+  allData,
+  dayStartData,
+  promisesData,
+  reliabilityData,
+}) {
+  const formatDate = (d) => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${dd}`;
+  };
+  const selectedDate = formatDate(date);
+
+  // ---------- 1. Filter each sheet ----------
+  const filterSheet = (sheet) =>
+    sheet.filter((row) => {
+      if (row.date !== selectedDate) return false;
+      if (selectedZones[0] !== "All" && !selectedZones.includes(row.zone))
+        return false;
+      if (selectedGm !== "All" && row.gm !== selectedGm) return false;
+      if (selectedHour !== "All" && String(row.hours).split(" ")[0] !== String(selectedHour))
+        return false;
+      return true;
+    });
+
+  const dayStartFiltered = filterSheet(dayStartData);
+  const rspsFiltered = filterSheet(allData);
+  const promisesFiltered = filterSheet(promisesData);
+  const reliabilityFiltered = filterSheet(reliabilityData);
+
+  // ---------- 2. Merge by Zone + GM ----------
+  const mergedRows = useMemo(() => {
+    const keySet = new Set();
+    const allKeys = [
+      ...dayStartFiltered,
+      ...rspsFiltered,
+      ...promisesFiltered,
+      ...reliabilityFiltered,
+    ].map((r) => `${r.zone}__${r.gm}`);
+    allKeys.forEach((k) => keySet.add(k));
+
+    return Array.from(keySet).map((key) => {
+      const [zone, gm] = key.split("__");
+      const d1 = dayStartFiltered.find((r) => r.zone === zone && r.gm === gm) || {};
+      const d2 = rspsFiltered.find((r) => r.zone === zone && r.gm === gm) || {};
+      const d3 = promisesFiltered.find((r) => r.zone === zone && r.gm === gm) || {};
+      const d4 = reliabilityFiltered.find((r) => r.zone === zone && r.gm === gm) || {};
+
+      const Daystart_cpd = d1.day_start_cpd || 0;
+      const RSPS_Pendency = d2.cpd_pendency || 0;
+      const Promises = d3.promises || 0;
+      const OFD = d4.ofd || 0;
+      const Delivered = d4.delivered || 0;
+      const Availability = d4.availability || 0;
+      const Landing = d4.landing || 0;
+
+      const PendencyPct = Promises ? (RSPS_Pendency / Promises) * 100 : 0;
+      const Conversion = OFD ? (Delivered / OFD) * 100 : 0;
+
+      return {
+        zone,
+        gm,
+        Daystart_cpd,
+        RSPS_Pendency,
+        Promises,
+        Pendency_pe: PendencyPct,
+        OFD,
+        Delivered,
+        Conversion,
+        Availability,
+        Landing,
+      };
+    });
+  }, [
+    dayStartFiltered,
+    rspsFiltered,
+    promisesFiltered,
+    reliabilityFiltered,
+  ]);
+
+  // ---------- 3. Totals ----------
+  const zones = [...new Set(mergedRows.map((r) => r.zone))];
+
+  const zoneTotals = zones.map((z) => {
+    const rows = mergedRows.filter((r) => r.zone === z);
+    return {
+      zone: z,
+      gm: "TOTAL",
+      Daystart_cpd: sum(rows.map((r) => r.Daystart_cpd)),
+      RSPS_Pendency: sum(rows.map((r) => r.RSPS_Pendency)),
+      Promises: sum(rows.map((r) => r.Promises)),
+      OFD: sum(rows.map((r) => r.OFD)),
+      Delivered: sum(rows.map((r) => r.Delivered)),
+      Availability: sum(rows.map((r) => r.Availability)),
+      Landing: sum(rows.map((r) => r.Landing)),
+    };
+  });
 
 
-const Executives = ({ date, selectedZones, selectedGm, selectedHour, allData,dayStartData,promisesData,reliabilityData }) => {
-  const formatDate = (date) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  };
+  zoneTotals.forEach((t) => {
+    t.Pendency_pe = t.Promises ? (t.RSPS_Pendency / t.Promises) * 100 : 0;
+    t.Conversion = t.OFD ? (t.Delivered / t.OFD) * 100 : 0;
+  });
 
-  const getFilteredData = (data,skipHours = false) => {
-    if (!data || data.length === 0 || !date) {
-      return [];
-    }
-    let filteredData = data.filter(item => {
-      const itemDate = item?.date;
-      const selectedDate = formatDate(date);
-      return itemDate === selectedDate;
-    });
-    if (selectedZones && selectedZones[0] !== "All" ) {
-      filteredData = filteredData.filter(item => selectedZones.includes(item?.zone));
-    }
-    if (selectedGm && selectedGm !== "All" ) {
-      filteredData = filteredData.filter(item => item?.gm === selectedGm);
-    }
-    if (selectedHour && selectedHour !== "All" && !skipHours) {
-      filteredData = filteredData.filter(item => {
-        const itemHour = parseInt(String(item?.hours).trim().split(' ')[0], 10);
-        return itemHour === parseInt(selectedHour, 10);
-      });
-    }
-    return filteredData;
-  };
+  const grandTotal = {
+    zone: "GRAND TOTAL",
+    gm: "",
+    Daystart_cpd: sum(zoneTotals.map((r) => r.Daystart_cpd)),
+    RSPS_Pendency: sum(zoneTotals.map((r) => r.RSPS_Pendency)),
+    Promises: sum(zoneTotals.map((r) => r.Promises)),
+    OFD: sum(zoneTotals.map((r) => r.OFD)),
+    Delivered: sum(zoneTotals.map((r) => r.Delivered)),
+    Availability: sum(zoneTotals.map((r) => r.Availability)),
+    Landing: sum(zoneTotals.map((r) => r.Landing)),
+  };
 
-  const calculateMetrics = (allData,dayStartData,promisesData) => {
-    const rspsPendencyData = getFilteredData(allData);
+  grandTotal.Pendency_pe = grandTotal.Promises
+    ? (grandTotal.RSPS_Pendency / grandTotal.Promises) * 100
+    : 0;
+  grandTotal.Conversion = grandTotal.OFD
+    ? (grandTotal.Delivered / grandTotal.OFD) * 100
+    : 0;
 
-    const dayStartSheetData = getFilteredData(dayStartData,true);
+  // ---------- 4. Render ----------
+  const renderRow = (row, isTotal = false) => (
+    <tr key={row.zone + row.gm} style={isTotal ? { fontWeight: "bold", background: "#f0f0f0" } : {}}>
+      <td>{row.zone}</td>
+      <td>{row.gm}</td>
+      <td>{row.Daystart_cpd}</td>
+      <td>{row.RSPS_Pendency}</td>
+      <td>{row.Promises}</td>
+      <td>{row.Pendency_pe?.toFixed(2)}%</td>
+      <td>{row.OFD}</td>
+      <td>{row.Delivered}</td>
+      <td>{row.Conversion?.toFixed(2)}%</td>
+      <td>{row.Availability}</td>
+      <td>{row.Landing}</td>
+    </tr>
+  );
 
-    const promisesSheetData = getFilteredData(promisesData,true);
-
-    const overallDaystart = dayStartSheetData.reduce((sum, item) => sum + (item.overall_daystart || 0), 0);
-    const cpdDaystart = dayStartSheetData.reduce((sum, item) => sum + (item.day_start_cpd || 0), 0);
-    const eobDaystart = dayStartSheetData.reduce((sum, item) => sum + (item.day_start_eob || 0), 0);
-    const ipd3Daystart = dayStartSheetData.reduce((sum, item) => sum + (item.day_start_ipd3 || 0), 0);
-    const ipd3PlusDaystart = dayStartSheetData.reduce((sum, item) => sum + (item.day_start_ipd3plus || 0), 0);
-    const fpdDaystart = dayStartSheetData.reduce((sum, item) => sum + (item.day_start_fpd || 0), 0);
-    
-    
-    const overallPendency = rspsPendencyData.reduce((sum, item) => sum + (item.overall_pendency || 0), 0);
-    const cpdPendency = rspsPendencyData.reduce((sum, item) => sum + (item.cpd_pendency || 0), 0);
-    const eobPendency = rspsPendencyData.reduce((sum, item) => sum + (item.eob_pendency || 0), 0);
-    const ipd3Pendency = rspsPendencyData.reduce((sum, item) => sum + (item.ipd3_pendency || 0), 0);
-    const ipd3PlusPendency = rspsPendencyData.reduce((sum, item) => sum + (item.ipd3plus_pendency || 0), 0);
-    const fpdPendency = rspsPendencyData.reduce((sum, item) => sum + (item.fpd_pendency || 0), 0);
-    const ncd = rspsPendencyData.reduce((sum, item) => sum + (item.ncd || 0), 0);
-    const cd = rspsPendencyData.reduce((sum, item) => sum + (item.cd || 0), 0);
-
-const promisesFiltredData = promisesSheetData.reduce((sum, item) => sum + (item.promises || 0), 0);
-    
-    return {
-      overallDaystart,
-      cpdDaystart,
-      eobDaystart,
-      ipd3Daystart,
-      ipd3PlusDaystart,
-      fpdDaystart,
-      overallPendency,
-      cpdPendency,
-      eobPendency,
-      ipd3Pendency,
-      ipd3PlusPendency,
-      fpdPendency,
-promisesFiltredData,
-ncd,
-cd
-    };
-  };
-
-  let metrics = calculateMetrics(allData,dayStartData,promisesData);
-
-  const getPercentage = (divident, divisor) => {
-    if (divisor === 0) return "0%";
-    const percentage = ((divident / divisor) * 100).toFixed(2);
-    return `${percentage}%`;
-  };
-
-let dashboardData = [
-    {
-      category: "Overall",
-      metrics: [
-        { title: "Overall DayStart", value: metrics.overallDaystart },
-        { title: "Overall Pendency", value: metrics.overallPendency, percentage: getPercentage(metrics.overallPendency, metrics.overallDaystart) },
-      ],
-    },
-    {
-      category: "CPD",
-      metrics: [
-        { title: "Day Start-CPD", value: metrics.cpdDaystart },
-        { title: "CPD-Pendency", value: metrics.cpdPendency, percentage: getPercentage(metrics.cpdPendency, metrics.cpdDaystart) },
-        { title: "CPD -Attempted_&Marked_NCD", value: metrics.ncd ? metrics.ncd : 0 },
-        { title: "CPD -Attempted_&_Marked_CD", value: metrics.cd ? metrics.cd : 0 },
-      ],
-    },
-    {
-      category: "EOB",
-      metrics: [
-        { title: "Day Start-EOB", value: metrics.eobDaystart },
-        { title: "EOB-Pendency", value: metrics.eobPendency, percentage: getPercentage(metrics.eobPendency, metrics.eobDaystart) },
-      ],
-    },
-    {
-      category: "IPD3",
-      metrics: [
-        { title: "Day Start-IPD3", value: metrics.ipd3Daystart },
-        { title: "IPD3-Pendency", value: metrics.ipd3Pendency, percentage: getPercentage(metrics.ipd3Pendency, metrics.ipd3Daystart) },
-      ],
-    },
-    {
-      category: "IPD3+",
-      metrics: [
-        { title: "Day Start-IPD3+", value: metrics.ipd3PlusDaystart },
-        { title: "IPD3+-Pendency", value: metrics.ipd3PlusPendency, percentage: getPercentage(metrics.ipd3PlusPendency, metrics.ipd3PlusDaystart) },
-      ],
-    },
-    {
-      category: "FPD",
-      metrics: [
-        { title: "DayStart-FPD", value: metrics.fpdDaystart },
-        { title: "FPD-Pendency", value: metrics.fpdPendency, percentage: getPercentage(metrics.fpdPendency, metrics.fpdDaystart) },
-      ],
-    },
-  ];
-
-const RefreshDashBoard=()=>{
-    metrics = calculateMetrics(allData,dayStartData,promisesData);
-
-    dashboardData = [
-    {
-      category: "Overall",
-      metrics: [
-        { title: "Overall DayStart", value: metrics.overallDaystart },
-        { title: "Overall Pendency", value: metrics.overallPendency, percentage: getPercentage(metrics.overallPendency, metrics.overallDaystart) },
-      ],
-    },
-    {
-      category: "CPD",
-      metrics: [
-        { title: "Day Start-CPD", value: metrics.cpdDaystart },
-        { title: "CPD-Pendency", value: metrics.cpdPendency, percentage: getPercentage(metrics.cpdPendency, metrics.cpdDaystart) },
-        { title: "CPD -Attempted_&Marked_NCD", value: metrics.ncd ? metrics.ncd : 0 },
-        { title: "CPD -Attempted_&_Marked_CD", value: metrics.cd ? metrics.cd : 0 },
-      ],
-    },
-    {
-      category: "EOB",
-      metrics: [
-        { title: "Day Start-EOB", value: metrics.eobDaystart },
-        { title: "EOB-Pendency", value: metrics.eobPendency, percentage: getPercentage(metrics.eobPendency, metrics.eobDaystart) },
-      ],
-    },
-    {
-      category: "IPD3",
-      metrics: [
-        { title: "Day Start-IPD3", value: metrics.ipd3Daystart },
-        { title: "IPD3-Pendency", value: metrics.ipd3Pendency, percentage: getPercentage(metrics.ipd3Pendency, metrics.ipd3Daystart) },
-      ],
-    },
-    {
-      category: "IPD3+",
-      metrics: [
-        { title: "Day Start-IPD3+", value: metrics.ipd3PlusDaystart },
-        { title: "IPD3+-Pendency", value: metrics.ipd3PlusPendency, percentage: getPercentage(metrics.ipd3PlusPendency, metrics.ipd3PlusDaystart) },
-      ],
-    },
-    {
-      category: "FPD",
-      metrics: [
-        { title: "DayStart-FPD", value: metrics.fpdDaystart },
-        { title: "FPD-Pendency", value: metrics.fpdPendency, percentage: getPercentage(metrics.fpdPendency, metrics.fpdDaystart) },
-      ],
-    },
-  ];
+  return (
+    <div className="container-fluid py-3" style={{ backgroundColor: "#f8f9fa" }}>
+      <div className="card shadow-lg rounded-4" style={{ backgroundColor: "white", marginLeft: "230px", width:"80vw",height:"84vh", overflowY: "auto",paddingRight:"0px" ,paddingLeft:"1rem",paddingTop:"1.5rem"}}>
+        <table className="table table-bordered table-sm">
+          <thead>
+            <tr>
+              {columnNames.map((h) => (
+                <th
+                  key={h}
+                  style={{
+                    background: "#2f5597",
+                    color: "white",
+                    padding: "8px",
+                    position: "sticky",
+                    top: 0,
+                    zIndex: 5,
+                  }}
+                >
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {zones.map((z) => (
+              <React.Fragment key={z}>
+                {mergedRows.filter((r) => r.zone === z).map((r) => renderRow(r))}
+                {renderRow(zoneTotals.find((t) => t.zone === z), true)}
+              </React.Fragment>
+            ))}
+            {renderRow(grandTotal, true)}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
 }
 
-useEffect(()=>{
-    RefreshDashBoard();
-},[allData])
 
-  
-
-  return (
-    <div className="container-fluid py-3" style={{ backgroundColor: "#f8f9fa", fontFamily: "'Roboto', sans-serif" }}>
-      <div className="card shadow-lg p-4 rounded-4" style={{ backgroundColor: "white", marginLeft: "250px"}}>
-        <table className="table">
-          <tbody>
-            {dashboardData.map((row, rowIndex) => (
-              <tr key={rowIndex}>
-                <td className="align-middle">
-                  <h5 className="fw-bold text-muted">{row.category}</h5>
-                </td>
-                <td className="w-250">
-                  <div className="d-flex flex-wrap gap-3">
-                    {row.metrics.map((metric, metricIndex) => (
-                      <div key={metricIndex} style={{ width: "200px"}}>
-                        <StatCard
-                          title={metric.title}
-                          mainValue={metric.value}
-                          percentage={metric.percentage}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-};
-
-export default function Main() {
+export default function Executives_Dash() {
     const ALLOWED_ZONES = ['East', 'West', 'North', 'South'];
   const [date, setDate] = useState(new Date());
   const [showCalendar, setShowCalendar] = useState(false);
@@ -249,6 +218,10 @@ export default function Main() {
 const [dayStartData,setDayStartData] = useState([]);
 const [promisesData,setPromisesData] = useState([]);
 const [reliabilityData,setReliabilityData] = useState([]);
+const [rspsSelectedData,setRspsSelectedData] = useState([]);
+const [dayStartSelectedData,setDayStartSelectedData] = useState([]);
+const [promisesSelectedData,setPromisesSelectedData] = useState([]);
+const [reliabilitySelectedData,setReliabilitySelectedData] = useState([]);
 
   
   const API_URL = "http://localhost:3001/api/executives-data";
@@ -336,7 +309,7 @@ setPromisesData([]);
       const parsedDataPromises = rowsPromises.map((row) => {
         const rowData = {};
         rowData.zone = row[getHeaderIndexPromises("zone")] || "";
-        rowData.gm = row[getHeaderIndexPromises("gm")] || "";
+        rowData.gm = row[getHeaderIndexPromises("gm_name")] || "";
         
         rowData.promises = parseFloat(String(row[getHeaderIndexPromises("promises")]).replace(/,/g, '') || 0);
         
@@ -358,6 +331,9 @@ setPromisesData([]);
         rowData.gm = row[getHeaderIndexReliability("gm")] || "";
         
         rowData.ofd = parseFloat(String(row[getHeaderIndexReliability("ofd")]).replace(/,/g, '') || 0);
+              rowData.delivered = parseFloat(String(row[getHeaderIndexReliability("delivered")]).replace(/,/g, '') || 0);
+              rowData.availability = parseFloat(String(row[getHeaderIndexReliability("availability")]).replace(/,/g, '') || 0);
+              rowData.landing = parseFloat(String(row[getHeaderIndexReliability("landing")]).replace(/,/g, '') || 0);
         
         rowData.date = row[getHeaderIndexReliability("date")] || "";
      rowData.hours = row[getHeaderIndexOfDayStart("hour")] || "";
@@ -397,16 +373,24 @@ setPromisesData([]);
     };
     const selectedDate = formatDate(date);
 
-    const selectedDateData = allData.filter(item => item.date === selectedDate);
+    const selectedDateDataRsps = allData.filter(item => item.date === selectedDate);
+    const selectedDateDataDayStart = dayStartData.filter(item => item.date === selectedDate);
+    const selectedDateDataPromises = promisesData.filter(item => item.date === selectedDate);
+    const selectedDateDataReliability = reliabilityData.filter(item => item.date === selectedDate);
+
+    setRspsSelectedData(selectedDateDataRsps);
+    setDayStartSelectedData(selectedDateDataDayStart);
+    setPromisesSelectedData(selectedDateDataPromises);
+    setReliabilitySelectedData(selectedDateDataReliability);
     
     // Update available zones based on selected date data
-    const uniqueZones = [...new Set(selectedDateData.map(item => String(item.zone).trim()))]
+    const uniqueZones = [...new Set(selectedDateDataRsps.map(item => String(item.zone).trim()))]
       .filter(zone => ALLOWED_ZONES.map(z => z.toLowerCase()).includes(zone.toLowerCase()) && zone !== "");
     setZones(["All", ...uniqueZones.sort()]);
 
     const filteredDataByZone = selectedZones === "All"
-      ? selectedDateData
-      : selectedDateData.filter(item => item.zone === selectedZones);
+      ? selectedDateDataRsps
+      : selectedDateDataRsps.filter(item => item.zone === selectedZones);
 
     const gmsForZone = [...new Set(filteredDataByZone.map(item => item.gm))].filter(Boolean).sort();
     setGms(["All", ...gmsForZone]);
@@ -427,7 +411,7 @@ setPromisesData([]);
     if (selectedHour !== "All" && !hoursForZone.includes(parseInt(selectedHour, 10))) {
       setSelectedHour("All");
     }
-  }, [date, allData, selectedZones]);
+  }, [date, allData, selectedZones,date]);
 
   const handleZoneChange = (zone) => {
     setSelectedZones(zone);
@@ -550,10 +534,10 @@ setPromisesData([]);
           selectedGm={selectedGm}
           selectedHour={selectedHour}
           date={date}
-          allData={allData}
-        dayStartData={dayStartData}
-        promisesData={promisesData}
-        reliabilityData={reliabilityData}
+          allData={rspsSelectedData}
+        dayStartData={dayStartSelectedData}
+        promisesData={promisesSelectedData}
+        reliabilityData={reliabilitySelectedData}
         />
       )}
     </>
