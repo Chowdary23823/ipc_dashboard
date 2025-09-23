@@ -8,8 +8,8 @@ export const TrackingInfoSearch = () => {
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
 
-    const apiURL = process.env.API_URL || "http://localhost:3001";
-    
+    const apiURL = import.meta.env.VITE_API_URL || "http://localhost:3001";
+
     const apiUrl = apiURL + "/api/tracking-data";
 
     const handleSearch = async () => {

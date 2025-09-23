@@ -258,7 +258,7 @@ const [dayStartSelectedData,setDayStartSelectedData] = useState([]);
 const [promisesSelectedData,setPromisesSelectedData] = useState([]);
 const [reliabilitySelectedData,setReliabilitySelectedData] = useState([]);
 
-  const apiUrl = process.env.API_URL || "http://localhost:3001";
+  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3001";
 
   const API_URL = apiUrl+"/api/executives-data";
 

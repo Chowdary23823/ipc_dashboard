@@ -605,7 +605,7 @@ export default function App() {
   
   const ALLOWED_ZONES = ['East', 'West', 'North', 'South'];
 
-  const apiUrl = process.env.API_URL || "http://localhost:3001";
+  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3001";
 
   const API_URL = apiUrl + "/api/FDP-data";
 

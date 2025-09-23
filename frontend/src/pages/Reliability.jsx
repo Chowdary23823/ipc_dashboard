@@ -550,7 +550,7 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const apiUrl = process.env.API_URL || "http://localhost:3001";
+  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3001";
   const API_URL = apiUrl + "/api/reliability-data";
 
   const fetchData = async () => {

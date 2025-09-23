@@ -526,7 +526,7 @@ export function Attainment() {
     setLoading(true);
     setError(null);
     try {
-      const apiUrl = process.env.API_URL || "http://localhost:3001";
+      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3001";
       const url = apiUrl+"/api/sheets-data";
       const res = await fetch(url);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
