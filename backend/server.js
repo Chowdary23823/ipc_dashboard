@@ -27,11 +27,8 @@ let RSPS_view = null; //RSPS
 let executivesData = null;
 let Tracking_view = null;
 
-const creds = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON);
-
-// Google Sheets auth
 const auth = new google.auth.GoogleAuth({
-  keyFile: creds,
+  keyFile: path.join("./service-account.json"),
   scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"],
 });
 
