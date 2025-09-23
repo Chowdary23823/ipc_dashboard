@@ -20,6 +20,7 @@ const links = [
       { path: "/RSPS_view", label: "RSPS_View" },
     ],
   },
+  { path: "/TrackingView", label: "Tracker" },
 ];
 
 export default function Sidebar() {

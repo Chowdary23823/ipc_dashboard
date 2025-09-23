@@ -8,6 +8,7 @@ import EagleEye from "../pages/EagleEye";
 import FDP_view from "../pages/FDP_view";
 import RSPS_view from "../pages/RSPS_view";
 import Executives_Dash from "../pages/Executives";
+import TrackingDash from "../pages/TrackingView";
 
 export default function AppRoutes() {
   return (
@@ -21,6 +22,7 @@ export default function AppRoutes() {
         <Route path="/FDP_view" element={<FDP_view />} />
         <Route path="/RSPS_view" element={<RSPS_view />} />
         <Route path="/Executives" element={<Executives_Dash />} />
+        <Route path="/TrackingView" element={<TrackingDash />} />
        
 
       </Routes>

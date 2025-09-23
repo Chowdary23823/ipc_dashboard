@@ -15,7 +15,6 @@ const columnNames = [
   "Landing",
 ];
 
-// Helper to safely sum numbers
 const sum = (arr) => arr.reduce((a, b) => a + (parseFloat(b) || 0), 0);
 
 export function Executives({
