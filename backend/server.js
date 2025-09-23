@@ -3,6 +3,9 @@ import cors from "cors";
 import { google } from "googleapis";
 import path from "path";
 import { setInterval } from 'timers';
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const app = express();
 app.use(cors());
