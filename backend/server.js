@@ -421,6 +421,6 @@ app.get("/api/tracking-data", (req, res) => {
     }
 });
 
-export default app;
-// app.listen(3001, ()=> console.log("Backend running on http://localhost:3001"));
+// export default app;
+app.listen(3001, ()=> console.log("Backend running on http://localhost:3001"));
 
