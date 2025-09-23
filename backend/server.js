@@ -28,7 +28,7 @@ let executivesData = null;
 let Tracking_view = null;
 
 const auth = new google.auth.GoogleAuth({
-  keyFile: path.join("./service-account.json"),
+  keyFile: path.join("../backend/service-account.json"),
   scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"],
 });
 
