@@ -8,7 +8,9 @@ export const TrackingInfoSearch = () => {
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
 
-    const apiUrl = "http://localhost:3001/api/tracking-data";
+    const apiURL = process.env.API_URL || "http://localhost:3001";
+    
+    const apiUrl = apiURL + "/api/tracking-data";
 
     const handleSearch = async () => {
         if (searchTerm.trim() === "") {

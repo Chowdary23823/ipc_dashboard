@@ -27,13 +27,15 @@ const auth = new google.auth.GoogleAuth({
   scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"],
 });
 
+
+const spreadsheetId = process.env.SHEET_ID || "1enVTHFGgBz0IqL0VSHWynbcIZPn_Xf44ZuPvwdK1Qzs";
+
 // Function to fetch and update the global sheet data variable for "D-1 Reservation"
 const fetchAndStoreData = async () => {
   try {
     const client = await auth.getClient();
     const sheets = google.sheets({ version: "v4", auth: client });
 
-    const spreadsheetId = "1enVTHFGgBz0IqL0VSHWynbcIZPn_Xf44ZuPvwdK1Qzs";
     const range = "D-1 Reservation";
 
     const response = await sheets.spreadsheets.values.get({ spreadsheetId, range });
@@ -55,7 +57,6 @@ const fetchDataForReliability = async () => {
     const client = await auth.getClient();
     const sheets = google.sheets({ version: "v4", auth: client });
 
-    const spreadsheetId = "1enVTHFGgBz0IqL0VSHWynbcIZPn_Xf44ZuPvwdK1Qzs";
     const range = "Reliability";
 
     const response = await sheets.spreadsheets.values.get({ spreadsheetId, range });
@@ -76,7 +77,6 @@ const fetchAndStoreeagle = async () => { //eagle
     const client = await auth.getClient();
     const sheets = google.sheets({ version: "v4", auth: client });
 
-    const spreadsheetId = "1enVTHFGgBz0IqL0VSHWynbcIZPn_Xf44ZuPvwdK1Qzs";
     const range = "EagleEye";
 
     const response = await sheets.spreadsheets.values.get({ spreadsheetId, range });
@@ -97,7 +97,6 @@ const fetchAndStoreFDP = async () => { //FDP
     const client = await auth.getClient();
     const sheets = google.sheets({ version: "v4", auth: client });
 
-    const spreadsheetId = "1enVTHFGgBz0IqL0VSHWynbcIZPn_Xf44ZuPvwdK1Qzs";
     const range = "FDP_Pendency";
 
     const response = await sheets.spreadsheets.values.get({ spreadsheetId, range });
@@ -118,7 +117,7 @@ const fetchAndStoreFDPMuiltiSheets = async () => { //FDP
     const client = await auth.getClient();
     const sheets = google.sheets({ version: "v4", auth: client });
 
-    const spreadsheetId = "1enVTHFGgBz0IqL0VSHWynbcIZPn_Xf44ZuPvwdK1Qzs";
+    
     //const range = "FDP_Demo";
 
     const sheetNames = ["Day_Start", "FDP_Pendency","Promises"];
@@ -155,7 +154,7 @@ const fetchAndStoreRSPS = async () => { //RSPS
     const client = await auth.getClient();
     const sheets = google.sheets({ version: "v4", auth: client });
 
-    const spreadsheetId = "1enVTHFGgBz0IqL0VSHWynbcIZPn_Xf44ZuPvwdK1Qzs";
+    
     const range = "RSPS_Pendencydemo";
 
     const response = await sheets.spreadsheets.values.get({ spreadsheetId, range });
@@ -176,7 +175,7 @@ const fetchAndStoreRSPSMul = async () => { //RSPS
     const client = await auth.getClient();
     const sheets = google.sheets({ version: "v4", auth: client });
 
-    const spreadsheetId = "1enVTHFGgBz0IqL0VSHWynbcIZPn_Xf44ZuPvwdK1Qzs";
+    
     const sheetNames = ["Day_Start", "RSPS_Pendency"];
      
     var sheetsData;
@@ -206,7 +205,7 @@ const fetchAndStoreExecutives = async () => { //RSPS
     const client = await auth.getClient();
     const sheets = google.sheets({ version: "v4", auth: client });
 
-    const spreadsheetId = "1enVTHFGgBz0IqL0VSHWynbcIZPn_Xf44ZuPvwdK1Qzs";
+    
     const sheetNames = ["Day_Start", "RSPS_Pendency","Promises","Reliability"];
      
     var sheetsData;
@@ -236,7 +235,7 @@ const fetchAndStoreTracking = async () => { //tracking
     const client = await auth.getClient();
     const sheets = google.sheets({ version: "v4", auth: client });
 
-    const spreadsheetId = "1enVTHFGgBz0IqL0VSHWynbcIZPn_Xf44ZuPvwdK1Qzs";
+
     const range = "Sheet25";
 
     const response = await sheets.spreadsheets.values.get({ spreadsheetId, range });
@@ -422,5 +421,6 @@ app.get("/api/tracking-data", (req, res) => {
     }
 });
 
-app.listen(3001, () => console.log("Backend running on http://localhost:3001"));
+export default app;
+// app.listen(3001, ()=> console.log("Backend running on http://localhost:3001"));
 

@@ -308,7 +308,9 @@ const [dayStartData,setDayStartData] = useState([]);
 const [promisesData,setPromisesData] = useState([]);
 
   const ALLOWED_ZONES = ['East', 'West', 'North', 'South'];
-  const API_URL = "http://localhost:3001/api/RSPS-data";
+
+  const apiUrl = process.env.API_URL || "http://localhost:3001";
+  const API_URL = apiUrl + "/api/RSPS-data";
 
   const fetchData = async () => {
     try {

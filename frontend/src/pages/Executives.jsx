@@ -258,8 +258,9 @@ const [dayStartSelectedData,setDayStartSelectedData] = useState([]);
 const [promisesSelectedData,setPromisesSelectedData] = useState([]);
 const [reliabilitySelectedData,setReliabilitySelectedData] = useState([]);
 
-  
-  const API_URL = "http://localhost:3001/api/executives-data";
+  const apiUrl = process.env.API_URL || "http://localhost:3001";
+
+  const API_URL = apiUrl+"/api/executives-data";
 
   const fetchData = async () => {
     try {

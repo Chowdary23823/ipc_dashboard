@@ -25,7 +25,8 @@ const SheetTable = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch("http://localhost:3001/api/eagle-data");
+        const apiUrl = process.env.API_URL || "http://localhost:3001";
+        const response = await fetch(apiUrl+"/api/eagle-data");
         const result = await response.json();
         if (result.values) {
           setData(result.values);

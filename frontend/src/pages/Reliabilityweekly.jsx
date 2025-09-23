@@ -470,7 +470,8 @@ export default function App() {
   // Define the allowed zones
   const ALLOWED_ZONES = ["East", "West", "North", "South"];
 
-  const API_URL = "http://localhost:3001/api/reliability-data";
+  const apiUrl = process.env.API_URL || "http://localhost:3001";
+  const API_URL = apiUrl + "/api/reliability-data";
 
   const fetchData = async () => {
     try {

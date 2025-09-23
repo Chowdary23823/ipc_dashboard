@@ -604,7 +604,10 @@ export default function App() {
   const [promisesData,setPromisesData] = useState([]);
   
   const ALLOWED_ZONES = ['East', 'West', 'North', 'South'];
-  const API_URL = "http://localhost:3001/api/FDP-data";
+
+  const apiUrl = process.env.API_URL || "http://localhost:3001";
+
+  const API_URL = apiUrl + "/api/FDP-data";
 
   const fetchData = async () => {
     try {
