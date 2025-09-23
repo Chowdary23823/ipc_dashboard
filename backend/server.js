@@ -23,7 +23,7 @@ let Tracking_view = null;
 
 // Google Sheets auth
 const auth = new google.auth.GoogleAuth({
-  keyFile: path.join("service-account.json"),
+  keyFile: path.join("./service-account.json"),
   scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"],
 });
 
