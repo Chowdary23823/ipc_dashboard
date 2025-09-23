@@ -20,7 +20,7 @@ const links = [
       { path: "/RSPS_view", label: "RSPS_View" },
     ],
   },
-  { path: "/TrackingView", label: "Tracker" },
+  { path: "/TrackingView", label: "Misroute dashboard" },
 ];
 
 export default function Sidebar() {
