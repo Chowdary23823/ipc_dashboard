@@ -10,7 +10,7 @@ import {
 } from "chart.js";
 import { Bar } from "react-chartjs-2";
 import ChartDataLabels from "chartjs-plugin-datalabels";
-
+import logo from '../assets/img/EKart Logo White.png';
 // Register Chart.js components and plugins
 ChartJS.register(
   CategoryScale,
@@ -669,7 +669,7 @@ export default function App() {
         <div className="container-fluid">
           <a className="navbar-brand d-flex align-items-center" href="#">
             <img
-              src="Ekart Logo White.png"
+              src={logo}
               alt="eKart Logo"
               height="40"
               className="me-2"

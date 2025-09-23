@@ -1,5 +1,6 @@
 // This is the updated App.js component
 import React, { useState, useEffect, useRef } from "react";
+import logo from '../assets/img/EKart Logo White.png';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -780,7 +781,7 @@ export default function App() {
         <div className="container-fluid">
           <a className="navbar-brand d-flex align-items-center" href="#">
             <img
-              src="Ekart Logo White.png"
+              src={logo}
               alt="eKart Logo"
               height="40"
               className="me-2"

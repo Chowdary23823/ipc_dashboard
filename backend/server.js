@@ -38,6 +38,8 @@ const fetchAndStoreData = async () => {
 
     const range = "D-1 Reservation";
 
+    console.log("Fetching data from Google Sheets..."+spreadsheetId);
+
     const response = await sheets.spreadsheets.values.get({ spreadsheetId, range });
     if (!response.data || !response.data.values) {
       console.error("No data found in the 'D-1 Reservation' sheet.");
@@ -46,6 +48,7 @@ const fetchAndStoreData = async () => {
     sheetData = response.data;
     console.log("Data for 'D-1 Reservation' successfully refreshed from Google Sheets.");
   } catch (err) {
+    console.log("Fetching data from Google Sheets..."+spreadsheetId);
     console.error("Failed to fetch 'D-1 Reservation' sheet data:", err.message);
     sheetData = null;
   }
@@ -67,6 +70,7 @@ const fetchDataForReliability = async () => {
     reliabilityweek = response.data;
     console.log("Data for 'Reliability' successfully refreshed from Google Sheets.");
   } catch (err) {
+    console.log("Failed to Fetching data from Google Sheets..."+spreadsheetId);
     console.error("Failed to fetch 'Reliability' sheet data:", err.message);
     reliabilityweek = null;
   }
@@ -87,6 +91,7 @@ const fetchAndStoreeagle = async () => { //eagle
     eagleeye = response.data;
     console.log("Data for 'EagleEye' successfully refreshed from Google Sheets.");
   } catch (err) {
+    console.log("Fail Fetching data from Google Sheets..."+spreadsheetId);
     console.error("Failed to fetch 'EagleEye' sheet data:", err.message);
     eagleeye = null;
   }
@@ -107,6 +112,7 @@ const fetchAndStoreFDP = async () => { //FDP
     FDP_view = response.data;
     console.log("Data for 'FDP' successfully refreshed from Google Sheets.");
   } catch (err) {
+    console.log("Fail Fetching data from Google Sheets..."+spreadsheetId);
     console.error("Failed to fetch 'FDP' sheet data:", err.message);
     FDP_view = null;
   }
@@ -144,6 +150,7 @@ const fetchAndStoreFDPMuiltiSheets = async () => { //FDP
     // FDP_view = response.data;
     console.log("Data for 'FDPMMul' successfully refreshed from Google Sheets.");
   } catch (err) {
+    console.log("Fail Fetching data from Google Sheets..."+spreadsheetId);
     console.error("Failed to fetch 'FDP' sheet data:", err.message);
     FDP_view = null;
   }
@@ -165,6 +172,7 @@ const fetchAndStoreRSPS = async () => { //RSPS
     RSPS_view = response.data;
     console.log("Data for 'RSPS' successfully refreshed from Google Sheets.");
   } catch (err) {
+    console.log("Fail Fetching data from Google Sheets..."+spreadsheetId);
     console.error("Failed to fetch 'RSPS' sheet data:", err.message);
     RSPS_view = null;
   }
@@ -195,6 +203,7 @@ const fetchAndStoreRSPSMul = async () => { //RSPS
 
     console.log("Data for 'RSPS' successfully refreshed from Google Sheets.");
   } catch (err) {
+    console.log("Fail Fetching data from Google Sheets..."+spreadsheetId);
     console.error("Failed to fetch 'RSPS' sheet data:", err.message);
     RSPS_view = null;
   }
@@ -225,6 +234,7 @@ const fetchAndStoreExecutives = async () => { //RSPS
 
     console.log("Data for 'RSPS' successfully refreshed from Google Sheets.");
   } catch (err) {
+    console.log("Fail Fetching data from Google Sheets..."+spreadsheetId);
     console.error("Failed to fetch 'RSPS' sheet data:", err.message);
     executivesData = null;
   }
@@ -246,6 +256,7 @@ const fetchAndStoreTracking = async () => { //tracking
     Tracking_view = response.data;
     console.log("Data for 'tracking' successfully refreshed from Google Sheets.");
   } catch (err) {
+  console.log("Fail Fetching data from Google Sheets..."+spreadsheetId);
     console.error("Failed to fetch 'tracking' sheet data:", err.message);
     Tracking_view = null;
   }
@@ -423,7 +434,7 @@ app.get("/api/tracking-data", (req, res) => {
 
 app.listen(3001, ()=> console.log("Backend running on http://localhost:3001"));
 
-export default app;
+// export default app;
 
 
 

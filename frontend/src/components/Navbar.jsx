@@ -1,4 +1,5 @@
 import React from "react";
+import logo from '../assets/img/ekkartlogo.png';
 
 const Navbar = ({
   date,
@@ -21,7 +22,7 @@ const Navbar = ({
     <nav className="navbar navbar-expand-lg navbar-dark bg-primary sticky-top shadow">
       <div className="container-fluid">
         <a className="navbar-brand d-flex align-items-center" href="#">
-          <img src="ekkartlogo.png" alt="eKart Logo" height="40" className="me-2" />
+          <img src={logo} alt="eKart Logo" height="40" className="me-2" />
         </a>
         <div className="d-flex align-items-center">
           {/* Date Picker */}

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
+import logo from '../assets/img/EKart Logo White.png';
 
 
 const formatWithCommas = (value) => {
@@ -489,7 +490,7 @@ setPromisesData([]);
         <div className="container-fluid">
           <a className="navbar-brand d-flex align-items-center" href="#">
             <img
-              src="Ekart Logo White.png"
+              src={logo}
               alt="eKart Logo"
               height="40"
               className="me-2"

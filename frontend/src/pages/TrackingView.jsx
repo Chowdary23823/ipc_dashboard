@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import logo from '../assets/img/EKart Logo White.png';
 
 /* ------------------ Tracking Info Search Component ------------------ */
 export const TrackingInfoSearch = () => {
@@ -112,7 +113,7 @@ export default function TrackingDash() {
                 <div className="navbar-content">
                     <a href="#" className="navbar-brand">
                         <img
-                            src="Ekart Logo White.png"
+                            src={logo}
                             alt="eKart Logo"
                             className="logo"
                         />

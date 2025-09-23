@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import logo from '../assets/img/EKart Logo White.png';
 
 const hours = Array.from({ length: 24 }, (_, i) => `${i}:00`);
 
@@ -122,7 +123,7 @@ const SheetTable = () => {
       >
         <a className="navbar-brand d-flex align-items-center" href="#">
           <img
-            src="Ekart Logo White.png"
+            src={logo}
             alt="eKart Logo"
             height="40"
             className="me-2"

@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef, useMemo } from "react";
+import logo from '../assets/img/EKart Logo White.png';
 
 // Load Bootstrap CSS and JS dynamically
 const Bootstrap = () => (
@@ -267,7 +268,7 @@ const Header = ({
       <div className="container-fluid">
         <a className="navbar-brand d-flex align-items-center" href="#">
           <img
-            src="Ekart Logo White.png"
+            src={logo}
             alt="eKart Logo"
             height="40"
             className="me-2"
