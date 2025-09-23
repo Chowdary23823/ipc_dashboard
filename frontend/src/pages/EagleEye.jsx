@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import logo from '../assets/img/EKart Logo White.png';
+import logo from '../assets/img/eklogo.png';
 
 const hours = Array.from({ length: 24 }, (_, i) => `${i}:00`);
 

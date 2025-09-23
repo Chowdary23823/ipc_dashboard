@@ -1,6 +1,6 @@
 // This is the updated App.js component
 import React, { useState, useEffect, useRef } from "react";
-import logo from '../assets/img/EKart Logo White.png';
+import logo from '../assets/img/eklogo.png';
 import {
   Chart as ChartJS,
   CategoryScale,

@@ -10,7 +10,7 @@ import {
 } from "chart.js";
 import { Bar } from "react-chartjs-2";
 import ChartDataLabels from "chartjs-plugin-datalabels";
-import logo from '../assets/img/EKart Logo White.png';
+import logo from '../assets/img/eklogo.png';
 // Register Chart.js components and plugins
 ChartJS.register(
   CategoryScale,

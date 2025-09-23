@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import logo from '../assets/img/EKart Logo White.png';
+import logo from '../assets/img/eklogo.png';
 
 /* ------------------ Tracking Info Search Component ------------------ */
 export const TrackingInfoSearch = () => {

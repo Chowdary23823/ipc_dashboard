@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
-import logo from '../assets/img/EKart Logo White.png';
+import logo from '../assets/img/eklogo.png';
 
 
 const formatWithCommas = (value) => {
