@@ -19,6 +19,99 @@
 /* .eagle-eye{
     height: 85vh;
 } */
+.dashboard-card {
+  background: #ffffff;
+  margin-left: 230px;
+  width: 80vw;
+  height: 84vh;
+  /* overflow: auto; */
+  padding: 1.5rem 1rem;
+  border-radius: 1rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+.dashboard-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.dashboard-table th {
+  background: linear-gradient(90deg, #2f5597, #1e3b75);
+  color: white;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding: 12px 8px;
+  text-align: center;
+  font-size: 0.85rem;
+}
+
+.dashboard-table td {
+  padding: 10px 8px;
+  text-align: center;
+  font-size: 0.82rem;
+  color: #333;
+}
+
+.dashboard-table tbody tr {
+  animation: fadeIn 0.3s ease-in;
+}
+
+.dashboard-table tbody tr:hover {
+  background-color: #f1f5f9;
+}
+
+.total-card {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  margin: 5px 0;
+  border-radius: 0.7rem;
+  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  font-weight: bold;
+}
+
+.progress-container {
+  height: 16px;
+  width: 100px;
+  background: #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+  display: inline-block;
+}
+
+.progress-bar {
+  height: 100%;
+  border-radius: 8px;
+  transition: width 0.4s ease;
+}
+
+@keyframes fadeIn {
+  0% {opacity: 0; transform: translateY(5px);}
+  100% {opacity: 1; transform: translateY(0);}
+}
+
+.table {
+  overflow-y: auto;
+  max-height: 84vh !important; /* or card height minus padding */
+}
+
+.table-scroll {
+  max-height: 72vh; /* Adjust based on card height minus padding */
+  overflow-y: auto;
+  scroll-behavior: smooth; /* smooth scrolling */
+}
+
+.total-row {
+  font-weight: bold;
+  background-color: #e0f2fe; /* optional: light background for totals */
+}
+
+
 
 
 

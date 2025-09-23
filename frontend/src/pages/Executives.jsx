@@ -146,58 +146,94 @@ export function Executives({
     ? (grandTotal.Delivered / grandTotal.OFD) * 100
     : 0;
 
+
+    const renderZoneSummaryCard = (t) => (
+  <div key={t.zone} className="total-card">
+    <div>{t.zone} TOTAL</div>
+    <div>
+      Daystart: {t.Daystart_cpd}, RSPS: {t.RSPS_Pendency}, Promises: {t.Promises}
+    </div>
+    <div>
+      <span>Pend%: {t.Pendency_pe.toFixed(1)}%</span>{" "}
+      <span>Conv%: {t.Conversion.toFixed(1)}%</span>
+    </div>
+  </div>
+);
+
+
   // ---------- 4. Render ----------
   const renderRow = (row, isTotal = false) => (
-    <tr key={row.zone + row.gm} style={isTotal ? { fontWeight: "bold", background: "#f0f0f0" } : {}}>
-      <td>{row.zone}</td>
-      <td>{row.gm}</td>
-      <td>{row.Daystart_cpd}</td>
-      <td>{row.RSPS_Pendency}</td>
-      <td>{row.Promises}</td>
-      <td>{row.Pendency_pe?.toFixed(2)}%</td>
-      <td>{row.OFD}</td>
-      <td>{row.Delivered}</td>
-      <td>{row.Conversion?.toFixed(2)}%</td>
-      <td>{row.Availability}</td>
-      <td>{row.Landing}</td>
-    </tr>
-  );
-
-  return (
-    <div className="container-fluid py-3" style={{ backgroundColor: "#f8f9fa" }}>
-      <div className="card shadow-lg rounded-4" style={{ backgroundColor: "white", marginLeft: "230px", width:"80vw",height:"84vh", overflowY: "auto",paddingRight:"0px" ,paddingLeft:"1rem",paddingTop:"1.5rem"}}>
-        <table className="table table-bordered table-sm">
-          <thead>
-            <tr>
-              {columnNames.map((h) => (
-                <th
-                  key={h}
-                  style={{
-                    background: "#2f5597",
-                    color: "white",
-                    padding: "8px",
-                    position: "sticky",
-                    top: 0,
-                    zIndex: 5,
-                  }}
-                >
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {zones.map((z) => (
-              <React.Fragment key={z}>
-                {mergedRows.filter((r) => r.zone === z).map((r) => renderRow(r))}
-                {renderRow(zoneTotals.find((t) => t.zone === z), true)}
-              </React.Fragment>
-            ))}
-            {renderRow(grandTotal, true)}
-          </tbody>
-        </table>
+  <tr key={row.zone + row.gm} className={isTotal ? "total-row" : ""}>
+    <td>{row.zone}</td>
+    <td>{row.gm}</td>
+    <td>{row.Daystart_cpd}</td>
+    <td>{row.RSPS_Pendency}</td>
+    <td>{row.Promises}</td>
+    <td>
+      <div className="progress-container">
+        <div
+          className="progress-bar"
+          style={{
+            width: `${Math.min(row.Pendency_pe || 0, 100)}%`,
+            backgroundColor: row.Pendency_pe > 80 ? "#ef4444" : "#3b82f6",
+          }}
+        />
       </div>
-    </div>
+      <span style={{ marginLeft: '5px', fontSize: '0.75rem' }}>{row.Pendency_pe?.toFixed(1)}%</span>
+    </td>
+    <td>{row.OFD}</td>
+    <td>{row.Delivered}</td>
+    <td>
+      <div className="progress-container">
+        <div
+          className="progress-bar"
+          style={{
+            width: `${Math.min(row.Conversion || 0, 100)}%`,
+            backgroundColor: row.Conversion > 80 ? "#10b981" : "#f59e0b",
+          }}
+        />
+      </div>
+      <span style={{ marginLeft: '5px', fontSize: '0.75rem' }}>{row.Conversion?.toFixed(1)}%</span>
+    </td>
+    <td>{row.Availability}</td>
+    <td>{row.Landing}</td>
+  </tr>
+);
+
+
+
+
+  return (<>
+    <div className="container-fluid py-3" style={{ backgroundColor: "#f8f9fa" }}>
+  <div className="dashboard-card">
+  <div className="table-scroll">
+    <table className="table table-bordered table-sm dashboard-table">
+      <thead>
+        <tr>
+          {columnNames.map((h) => (
+            <th key={h}>{h}</th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {zones.map((z) => (
+          <React.Fragment key={z}>
+            {mergedRows
+              .filter((r) => r.zone === z)
+              .map((r) => renderRow(r))}
+            {renderRow(zoneTotals.find((t) => t.zone === z), true)}
+          </React.Fragment>
+        ))}
+        {renderRow(grandTotal, true)}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+</div>
+
+</>
   );
 }
 
