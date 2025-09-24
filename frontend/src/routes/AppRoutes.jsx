@@ -12,7 +12,7 @@ import TrackingDash from "../pages/TrackingView";
 
 export default function AppRoutes() {
   return (
-    <Layout>
+    
       <Routes>
         <Route path="/" element={<Navigate to="/Executives" />} />
         <Route path="/Reliabilityweekly" element={<Reliabilityweekly />} />
@@ -26,6 +26,5 @@ export default function AppRoutes() {
        
 
       </Routes>
-    </Layout>
   );
 }
