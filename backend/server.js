@@ -27,13 +27,20 @@ let RSPS_view = null; //RSPS
 let executivesData = null;
 let Tracking_view = null;
 
+const creds = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON);
+
+creds.private_key = creds.private_key.replace(/\\n/g, '\n');
+
+console.log("------------------"+JSON.stringify(creds, null, 2));
+
 const auth = new google.auth.GoogleAuth({
-  keyFile: path.join("../backend/service-account.json"),
+  credentials: creds,
   scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"],
 });
 
 
 const spreadsheetId = process.env.SHEET_ID || "1enVTHFGgBz0IqL0VSHWynbcIZPn_Xf44ZuPvwdK1Qzs";
+
 
 // Function to fetch and update the global sheet data variable for "D-1 Reservation"
 const fetchAndStoreData = async () => {
