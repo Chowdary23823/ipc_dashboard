@@ -31,7 +31,7 @@ const creds = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON);
 
 creds.private_key = creds.private_key.replace(/\\n/g, '\n');
 
-console.log("------------------"+JSON.stringify(creds, null, 2));
+// console.log("------------------"+JSON.stringify(creds, null, 2));
 
 const auth = new google.auth.GoogleAuth({
   credentials: creds,
